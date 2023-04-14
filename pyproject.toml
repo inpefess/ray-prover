@@ -1,0 +1,153 @@
+[tool.poetry]
+name = "ray-prover"
+version = "0.0.1"
+description = "Generic saturation prover using Ray RLlib"
+authors = ["Boris Shminke <boris@shminke.ml>"]
+license = "Apache-2.0"
+packages = [{include = "ray_prover"}]
+repository = "https://github.com/inpefess/ray-prover"
+readme = "README.rst"
+classifiers=[
+	"Programming Language :: Python :: 3.8",
+	"Programming Language :: Python :: 3.9",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"License :: OSI Approved :: Apache Software License",
+	"Operating System :: OS Independent",
+	"Intended Audience :: Science/Research",
+	"Development Status :: 1 - Planning",
+	"Environment :: Console",
+	"Natural Language :: English",
+	"Topic :: Scientific/Engineering :: Artificial Intelligence",
+	"Typing :: Typed"
+]
+include = ["ray_prover/py.typed"]
+
+[tool.poetry.dependencies]
+python = ">= 3.8.1, < 3.12"
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+jupyterlab = "*"
+mypy = "*"
+pylint = "*"
+pytest-coverage = "*"
+pre-commit = "*"
+types-dataclasses = "*"
+sphinx-autodoc-typehints = "*"
+pydocstyle = "*"
+tbump = "*"
+pyenchant = "*"
+flake8 = "*"
+toml = "*"
+furo = "*"
+sphinx-gallery = "*"
+pillow = "*"
+matplotlib = "*"
+
+[tool.black]
+line-length=79
+
+[tool.isort]
+profile = "black"
+src_paths = ["ray_prover"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--doctest-modules --cov ray_prover --cov-report xml --cov-fail-under=100 --junit-xml test-results/ray-prover.xml"
+testpaths = ["ray_prover"]
+doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
+
+[tool.pylint.MASTER]
+load-plugins = [
+    "pylint.extensions.docparams",
+    "pylint.extensions.mccabe",
+]
+
+[tool.pylint.parameter_documentation]
+accept-no-param-doc = false
+accept-no-raise-doc = false
+accept-no-return-doc = true
+accept-no-yields-doc = false
+default-docstring-type = "sphinx"
+
+[tool.pylint.similarities]
+ignore-comments = true
+ignore-docstrings = true
+ignore-imports = true
+ignore-signatures = true
+min-similarity-lines = 4
+
+[tool.pylint.format]
+ignore-long-lines = "https://"
+max-line-length = 79
+
+[tool.pylint.design]
+max-statements = 10
+
+[tool.pylint.spelling]
+spelling-dict = "en_GB"
+spelling-private-dict-file = "spelling.dict"
+
+[tool.mypy]
+show_error_codes = true
+incremental = true
+disable_error_code = "no-redef"
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["importlib_resources", "enchant.*"]
+ignore_missing_imports = true
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = True
+envlist = py38,py39,py310,py311
+
+[testenv]
+deps =
+    pytest-cov
+    pydocstyle
+    pylint
+    mypy
+    toml
+    pyenchant
+    flake8
+commands =
+    pydocstyle ray_prover
+    flake8 ray_prover
+    pylint ray_prover
+    mypy ray_prover
+    pytest
+"""
+
+[tool.tbump]
+github_url = "https://github.com/inpfess/ray-prover/"
+
+[tool.tbump.version]
+current = "0.9.2"
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+  '''
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "v{new_version}"
+
+[[tool.tbump.file]]
+src = "ray_prover/__init__.py"
+
+[[tool.tbump.file]]
+src = "pyproject.toml"
+
+[[tool.tbump.file]]
+src = "doc/conf.py"
