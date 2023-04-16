@@ -65,24 +65,32 @@ def env_creator(env_config: Dict[str, Any]) -> gym.Env:
 
 
 def train_ppo(
-    arguments_to_parse: Optional[List[str]] = None,
+    arguments_to_parse: Optional[List[str]] = None, test_run: bool = False
 ) -> None:
     """
     Train PPO.
 
+    >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
-    ...     "--num_iter", "1"]
-    >>> train_ppo(test_arguments + ["--random_baseline"])
+    ...     "--num_iter", "1", "--problem_filename", MOCK_TPTP_PROBLEM]
+    >>> train_ppo(test_arguments + ["--random_baseline"], True)
+    >>> train_ppo(test_arguments, True)
 
     :param arguments_to_parse: command line arguments (or explicitly set ones)
+    :param test_run: we use light parameters for testing
     """
     parsed_arguments = parse_args(arguments_to_parse)
     register_env("PPOProver", env_creator)
     ModelCatalog.register_custom_model("pa_model", TorchParametricActionsModel)
     if parsed_arguments.random_baseline:
-        config = AlgorithmConfig(RandomParametricAlgorithm)
+        config = AlgorithmConfig(RandomParametricAlgorithm).rollouts(
+            rollout_fragment_length=1 if test_run else 200
+        )
     else:
-        config = PPOConfig()
+        config = PPOConfig().training(
+            sgd_minibatch_size=1 if test_run else 128,
+            num_sgd_iter=1 if test_run else 30,
+        )
     algo = (
         config.environment(
             "PPOProver",
@@ -105,7 +113,8 @@ def train_ppo(
                     ),
                     "action_embed_size": EMBEDDING_DIM,
                 },
-            }
+            },
+            train_batch_size=2 if test_run else 4000,
         )
         .build()
     )

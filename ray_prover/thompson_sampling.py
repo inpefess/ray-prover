@@ -135,24 +135,32 @@ def parse_args(
 
 
 def train_thompson_sampling(
-    arguments_to_parse: Optional[List[str]] = None,
+    arguments_to_parse: Optional[List[str]] = None, test_run: bool = False
 ) -> None:
     """
     Train Thompson sampling.
 
+    >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
-    ...     "--num_iter", "1"]
-    >>> train_thompson_sampling(test_arguments)
-    >>> train_thompson_sampling(test_arguments + ["--random_baseline"])
+    ...     "--num_iter", "1", "--problem_filename", MOCK_TPTP_PROBLEM]
+    >>> train_thompson_sampling(test_arguments + ["--random_baseline"], True)
+    >>> train_thompson_sampling(test_arguments, True)
 
     :param arguments_to_parse: command line arguments (or explicitly set ones)
+    :param test_run: we use light parameters for testing
     """
     parsed_arguments = parse_args(arguments_to_parse)
     register_env("ProverBandit", env_creator)
     if parsed_arguments.random_baseline:
-        config = AlgorithmConfig(RandomAlgorithm).framework("torch")
+        config = (
+            AlgorithmConfig(RandomAlgorithm)
+            .framework("torch")
+            .rollouts(rollout_fragment_length=1 if test_run else 200)
+        )
     else:
-        config = BanditLinTSConfig()
+        config = BanditLinTSConfig().reporting(
+            min_sample_timesteps_per_iteration=0 if test_run else 100
+        )
     algo = config.environment(
         "ProverBandit",
         env_config={
