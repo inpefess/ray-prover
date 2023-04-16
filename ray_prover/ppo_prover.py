@@ -33,7 +33,6 @@ from ray.rllib.examples.random_parametric_agent import (
 from ray.rllib.models import ModelCatalog
 from ray.tune.registry import register_env
 
-from ray_prover.constants import ONE_PROBLEM
 from ray_prover.thompson_sampling import parse_args
 
 EMBEDDING_DIM = 256
@@ -41,14 +40,16 @@ EMBEDDING_DIM = 256
 
 def env_creator(env_config: Dict[str, Any]) -> gym.Env:
     """
-    Return a multi-armed-bandit version of a saturation prover.
+    Return a prover with AST2Vec state representation.
 
     :param env_config: an environment config
     :returns: an environment
     """
+    config_copy = env_config.copy()
+    problem_filename = config_copy.pop("problem_filename")
     env = DuplicateKeyObsWrapper(
         AST2VecWrapper(
-            gym.make(**env_config).unwrapped,
+            gym.make(**config_copy).unwrapped,
             features_num=EMBEDDING_DIM,
         ),
         # ``ParametricActionsModel`` expects a key 'cart' (from the
@@ -59,7 +60,7 @@ def env_creator(env_config: Dict[str, Any]) -> gym.Env:
         new_key="cart",
         key_to_duplicate="avail_actions",
     )
-    env.set_task(ONE_PROBLEM)
+    env.set_task(problem_filename)
     return env
 
 
@@ -88,6 +89,7 @@ def train_ppo(
             env_config={
                 "id": f"{parsed_arguments.prover}-v0",
                 "max_clauses": parsed_arguments.max_clauses,
+                "problem_filename": parsed_arguments.problem_filename,
             },
             # https://github.com/ray-project/ray/issues/23925
             disable_env_checking=True,

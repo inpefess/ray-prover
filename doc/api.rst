@@ -13,9 +13,10 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 
+API documentation
+******************
+  
 .. automodule:: ray_prover.thompson_sampling
    :members:
 .. automodule:: ray_prover.ppo_prover
-   :members:
-.. automodule:: ray_prover.constants
    :members:

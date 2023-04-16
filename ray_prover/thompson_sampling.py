@@ -32,8 +32,6 @@ from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.policy.sample_batch import SampleBatch
 from ray.tune.registry import register_env
 
-from ray_prover.constants import ONE_PROBLEM
-
 
 def env_creator(env_config: Dict[str, Any]) -> gym.Env:
     """
@@ -42,11 +40,13 @@ def env_creator(env_config: Dict[str, Any]) -> gym.Env:
     :param env_config: an environment config
     :returns: an environment
     """
+    config_copy = env_config.copy()
+    problem_filename = config_copy.pop("problem_filename")
     env = ConstantParametricActionsWrapper(
-        AgeWeightBandit(gym.make(**env_config)),
+        AgeWeightBandit(gym.make(**config_copy)),
         avail_actions_key="item",
     )
-    env.set_task(ONE_PROBLEM)
+    env.set_task(problem_filename)
     return env
 
 
@@ -125,6 +125,12 @@ def parse_args(
         required=True,
         help="Number of training iterations",
     )
+    parser.add_argument(
+        "--problem_filename",
+        type=str,
+        required=True,
+        help="TPTP problem file name",
+    )
     return parser.parse_args(arguments_to_parse)
 
 
@@ -152,6 +158,7 @@ def train_thompson_sampling(
         env_config={
             "id": f"{parsed_arguments.prover}-v0",
             "max_clauses": parsed_arguments.max_clauses,
+            "problem_filename": parsed_arguments.problem_filename,
         },
     ).build()
     for _ in range(parsed_arguments.num_iter):
