@@ -13,7 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 
-|Documentation Status|\
+|CircleCI|\ |Documentation Status|\ |codecov|\
 
 ***********
 ray-prover
@@ -38,5 +38,9 @@ How to use
    python ray_prover/ppo_prover.py --prover Vampire --max_clause 20 --num_iter 10 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p --random_baseline
    python ray_prover/ppo_prover.py --prover Vampire --max_clause 20 --num_iter 10 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p
 
+.. |CircleCI| image:: https://circleci.com/gh/inpefess/ray-prover.svg?style=svg
+   :target: https://circleci.com/gh/inpefess/ray-prover
 .. |Documentation Status| image:: https://readthedocs.org/projects/ray-prover/badge/?version=latest
    :target: https://ray-prover.readthedocs.io/en/latest/?badge=latest
+.. |codecov| image:: https://codecov.io/gh/inpefess/ray-prover/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/inpefess/ray-prover
