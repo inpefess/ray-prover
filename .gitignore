@@ -131,3 +131,4 @@ dmypy.json
 *.*~
 doc/_build
 test-results/
+flycheck_*.py

@@ -14,11 +14,10 @@
 
 # noqa: D205, D400
 """
-An examples of Thompson sampling
-=================================
+Examples of Thompson sampling
+==============================
 """
 import argparse
-import os
 from typing import Any, Dict, List, Optional
 
 import gymnasium as gym
@@ -33,6 +32,8 @@ from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.policy.sample_batch import SampleBatch
 from ray.tune.registry import register_env
 
+from ray_prover.constants import ONE_PROBLEM
+
 
 def env_creator(env_config: Dict[str, Any]) -> gym.Env:
     """
@@ -45,15 +46,7 @@ def env_creator(env_config: Dict[str, Any]) -> gym.Env:
         AgeWeightBandit(gym.make(**env_config)),
         avail_actions_key="item",
     )
-    problem_filename = os.path.join(
-        os.environ["WORK"],
-        "data",
-        "TPTP-v8.1.2",
-        "Problems",
-        "SET",
-        "SET001-1.p",
-    )
-    env.set_task(problem_filename)
+    env.set_task(ONE_PROBLEM)
     return env
 
 
@@ -65,14 +58,22 @@ class PatchedRandomPolicy(RandomPolicy):
     def load_batch_into_buffer(
         self, batch: SampleBatch, buffer_index: int = 0
     ) -> int:
-        """Don't load anything anywhere."""
+        """
+        Don't load anything anywhere.
+
+        :returns: always zero (no samples loaded)
+        """
         return 0
 
     # pylint: disable=unused-argument
     def learn_on_loaded_batch(
         self, offset: int = 0, buffer_index: int = 0
     ) -> dict:
-        """Don't learn anything and return empty results."""
+        """
+        Don't learn anything and return empty results.
+
+        :returns: empty dictionary (no metrics computed)
+        """
         return {}
 
 
@@ -83,7 +84,11 @@ class RandomAlgorithm(Algorithm):
     # pylint: disable=unused-argument, missing-param-doc
     @classmethod
     def get_default_policy_class(cls, config: AlgorithmConfig) -> RandomPolicy:
-        """We created PatchedRandomPolicy exactly for this algorithm."""
+        """
+        We created PatchedRandomPolicy exactly for this algorithm.
+
+        :returns: patched random policy
+        """
         return PatchedRandomPolicy  # type: ignore
 
 
@@ -94,12 +99,13 @@ def parse_args(
     Parse command line arguments.
 
     :param arguments_to_parse: command line arguments (or explicitly set ones)
+    :returns: parsed arguments name-space
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--random_baseline",
         action="store_true",
-        help="Run random baseline instead of Thompson sampling",
+        help="Run random baseline instead of training an algorithm",
     )
     parser.add_argument(
         "--prover",
