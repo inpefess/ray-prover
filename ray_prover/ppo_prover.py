@@ -17,11 +17,12 @@
 PPO example
 ============
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-import gymnasium as gym
+import gymnasium
 from gym_saturation.wrappers.ast2vec_wrapper import AST2VecWrapper
 from gym_saturation.wrappers.duplicate_key_obs import DuplicateKeyObsWrapper
+from gymnasium import Env
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.examples.parametric_actions_cartpole import (
@@ -31,96 +32,130 @@ from ray.rllib.examples.random_parametric_agent import (
     RandomParametricAlgorithm,
 )
 from ray.rllib.models import ModelCatalog
-from ray.tune.registry import register_env
 
-from ray_prover.thompson_sampling import parse_args
+from ray_prover.training_helper import TrainingHelper
 
 EMBEDDING_DIM = 256
 
 
-def env_creator(env_config: Dict[str, Any]) -> gym.Env:
+class PPOProver(TrainingHelper):
     """
-    Return a prover with AST2Vec state representation.
+    PPO-based prover experiments helper.
 
-    :param env_config: an environment config
-    :returns: an environment
-    """
-    config_copy = env_config.copy()
-    problem_filename = config_copy.pop("problem_filename")
-    env = DuplicateKeyObsWrapper(
-        AST2VecWrapper(
-            gym.make(**config_copy).unwrapped,
-            features_num=EMBEDDING_DIM,
-        ),
-        # ``ParametricActionsModel`` expects a key 'cart' (from the
-        # CartPole environment) to be present in the observation
-        # dictionary. We add such a key and use 'avail_actions' as its
-        # value, since in case of the given clause algorithm, the clauses
-        # to choose from are both actions and observations.
-        new_key="cart",
-        key_to_duplicate="avail_actions",
-    )
-    env.set_task(problem_filename)
-    return env
-
-
-def train_ppo(
-    arguments_to_parse: Optional[List[str]] = None, test_run: bool = False
-) -> None:
-    """
-    Train PPO.
-
+    >>> local_dir = getfixture("tmp_path")
     >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
-    ...     "--num_iter", "1", "--problem_filename", MOCK_TPTP_PROBLEM]
-    >>> train_ppo(test_arguments + ["--random_baseline"], True)
-    >>> train_ppo(test_arguments, True)
+    ...     "--problem_filename", MOCK_TPTP_PROBLEM]
+    >>> PPOProver("test", True, local_dir).train_algorithm(
+    ...     test_arguments + ["--random_baseline"])
+    == Status ==
+     ...
+        hist_stats:
+          episode_lengths:
+          - 1
+     ...
+    <BLANKLINE>
+    >>> PPOProver("test", True, local_dir).train_algorithm(test_arguments)
+    == Status ==
+     ...
+        hist_stats:
+          episode_lengths:
+          - 1
+     ...
+    <BLANKLINE>
 
     :param arguments_to_parse: command line arguments (or explicitly set ones)
     :param test_run: we use light parameters for testing
     """
-    parsed_arguments = parse_args(arguments_to_parse)
-    register_env("PPOProver", env_creator)
-    ModelCatalog.register_custom_model("pa_model", TorchParametricActionsModel)
-    if parsed_arguments.random_baseline:
-        config = AlgorithmConfig(RandomParametricAlgorithm).rollouts(
-            rollout_fragment_length=1 if test_run else 200
+
+    def __init__(
+        self,
+        env_name: str,
+        test_run: bool = True,
+        local_dir: Optional[str] = None,
+    ):
+        """
+        Initialise all.
+
+        :param env_name: a name for logging
+        :param test_run: we use light parameters for testing
+        :param local_dir: local directory to save training results to.
+            If ``None`` then Ray default is used
+        """
+        super().__init__(env_name, test_run, local_dir)
+        ModelCatalog.register_custom_model(
+            "pa_model", TorchParametricActionsModel
         )
-    else:
-        config = PPOConfig().training(
-            sgd_minibatch_size=1 if test_run else 128,
-            num_sgd_iter=1 if test_run else 30,
+
+    def env_creator(
+        self, env_config: Dict[str, Any]
+    ) -> Env:  # pragma: no cover
+        """
+        Return a prover with AST2Vec state representation.
+
+        :param env_config: an environment config
+        :returns: an environment
+        """
+        config_copy = env_config.copy()
+        problem_filename = config_copy.pop("problem_filename")
+        env = DuplicateKeyObsWrapper(
+            AST2VecWrapper(
+                gymnasium.make(**config_copy).unwrapped,
+                features_num=EMBEDDING_DIM,
+            ),
+            # ``ParametricActionsModel`` expects a key 'cart' (from the
+            # CartPole environment) to be present in the observation
+            # dictionary. We add such a key and use 'avail_actions' as its
+            # value, since in case of the given clause algorithm, the clauses
+            # to choose from are both actions and observations.
+            new_key="cart",
+            key_to_duplicate="avail_actions",
         )
-    algo = (
-        config.environment(
-            "PPOProver",
-            env_config={
-                "id": f"{parsed_arguments.prover}-v0",
-                "max_clauses": parsed_arguments.max_clauses,
-                "problem_filename": parsed_arguments.problem_filename,
-            },
-            # https://github.com/ray-project/ray/issues/23925
-            disable_env_checking=True,
-        )
-        .framework("torch")
-        .training(
-            model={
-                "custom_model": "pa_model",
-                # we pass relevant parameters to ``ParametricActionsModel``
-                "custom_model_config": {
-                    "true_obs_shape": (
-                        EMBEDDING_DIM * parsed_arguments.max_clauses,
-                    ),
-                    "action_embed_size": EMBEDDING_DIM,
+        env.set_task(problem_filename)
+        return env
+
+    def get_algorithm_config(self) -> AlgorithmConfig:
+        """
+        Return an algorithm config.
+
+        :returns: algorithm config
+        """
+        if self.parsed_arguments.random_baseline:
+            config = AlgorithmConfig(RandomParametricAlgorithm).rollouts(
+                rollout_fragment_length=1 if self.test_run else 200
+            )
+        else:
+            config = PPOConfig().training(
+                sgd_minibatch_size=1 if self.test_run else 128,
+                num_sgd_iter=1 if self.test_run else 30,
+            )
+        return (
+            config.environment(
+                self.env_name,
+                env_config={
+                    "id": f"{self.parsed_arguments.prover}-v0",
+                    "max_clauses": self.parsed_arguments.max_clauses,
+                    "problem_filename": self.parsed_arguments.problem_filename,
                 },
-            },
-            train_batch_size=2 if test_run else 4000,
+                # https://github.com/ray-project/ray/issues/23925
+                disable_env_checking=True,
+            )
+            .framework("torch")
+            .training(
+                model={
+                    "custom_model": "pa_model",
+                    # we pass relevant parameters to ``ParametricActionsModel``
+                    "custom_model_config": {
+                        "true_obs_shape": (
+                            EMBEDDING_DIM * self.parsed_arguments.max_clauses,
+                        ),
+                        "action_embed_size": EMBEDDING_DIM,
+                    },
+                },
+                train_batch_size=2 if self.test_run else 4000,
+            )
         )
-        .build()
-    )
-    for _ in range(parsed_arguments.num_iter):
-        algo.train()
 
 
 if __name__ == "__main__":
-    train_ppo()  # pragma: no cover
+    PPOProver("PPOProver").train_algorithm()  # pragma: no cover
