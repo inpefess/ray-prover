@@ -17,6 +17,7 @@
 PPO example
 ============
 """
+import os
 from typing import Any, Dict, Optional
 
 import gymnasium
@@ -46,7 +47,7 @@ class PPOProver(TrainingHelper):
     >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
     ...     "--problem_filename", MOCK_TPTP_PROBLEM]
-    >>> PPOProver("test", True, local_dir).train_algorithm(
+    >>> PPOProver(True, local_dir).train_algorithm(
     ...     test_arguments + ["--random_baseline"])
     == Status ==
      ...
@@ -55,7 +56,7 @@ class PPOProver(TrainingHelper):
           - 1
      ...
     <BLANKLINE>
-    >>> PPOProver("test", True, local_dir).train_algorithm(test_arguments)
+    >>> PPOProver(True, local_dir).train_algorithm(test_arguments)
     == Status ==
      ...
         hist_stats:
@@ -70,19 +71,17 @@ class PPOProver(TrainingHelper):
 
     def __init__(
         self,
-        env_name: str,
         test_run: bool = False,
         local_dir: Optional[str] = None,
     ):
         """
         Initialise all.
 
-        :param env_name: a name for logging
         :param test_run: we use light parameters for testing
         :param local_dir: local directory to save training results to.
             If ``None`` then Ray default is used
         """
-        super().__init__(env_name, test_run, local_dir)
+        super().__init__(test_run, local_dir)
         ModelCatalog.register_custom_model(
             "pa_model", TorchParametricActionsModel
         )
@@ -131,7 +130,8 @@ class PPOProver(TrainingHelper):
             )
         return (
             config.environment(
-                self.env_name,
+                self.parsed_arguments.prover
+                + os.path.basename(self.parsed_arguments.problem_filename),
                 env_config={
                     "id": f"{self.parsed_arguments.prover}-v0",
                     "max_clauses": self.parsed_arguments.max_clauses,
@@ -158,4 +158,4 @@ class PPOProver(TrainingHelper):
 
 
 if __name__ == "__main__":
-    PPOProver("PPOProver").train_algorithm()  # pragma: no cover
+    PPOProver().train_algorithm()  # pragma: no cover

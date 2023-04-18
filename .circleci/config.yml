@@ -14,7 +14,9 @@ jobs:
       - run:
           name: upload data to codecov
           command: |
-            bash <(curl -s https://codecov.io/bash) -X gcov -X coveragepy
+            curl -Os https://uploader.codecov.io/latest/linux/codecov
+            chmod +x codecov
+            ./codecov
       - store_artifacts:
           path: build
       - store_test_results:

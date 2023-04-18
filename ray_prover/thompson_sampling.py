@@ -40,7 +40,7 @@ class ThompsonSampling(TrainingHelper):
     >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
     ...     "--problem_filename", MOCK_TPTP_PROBLEM]
-    >>> ThompsonSampling("test", True, local_dir).train_algorithm(
+    >>> ThompsonSampling(True, local_dir).train_algorithm(
     ...     test_arguments + ["--random_baseline"])
     == Status ==
      ...
@@ -49,7 +49,7 @@ class ThompsonSampling(TrainingHelper):
           - 1
      ...
     <BLANKLINE>
-    >>> ThompsonSampling("test", True, local_dir).train_algorithm(
+    >>> ThompsonSampling(True, local_dir).train_algorithm(
     ...     test_arguments)
     == Status ==
      ...
@@ -99,4 +99,4 @@ class ThompsonSampling(TrainingHelper):
 
 
 if __name__ == "__main__":
-    ThompsonSampling("BanditProver").train_algorithm()  # pragma: no cover
+    ThompsonSampling().train_algorithm()  # pragma: no cover

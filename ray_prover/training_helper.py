@@ -18,6 +18,7 @@ Training Helper
 ================
 """
 import argparse
+import os
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
@@ -33,21 +34,18 @@ class TrainingHelper(ABC):
 
     def __init__(
         self,
-        env_name: str,
         test_run: bool = False,
         local_dir: Optional[str] = None,
     ):
         """
         Initialise all.
 
-        :param env_name: a name for logging
         :param test_run: we use light parameters for testing
         :param local_dir: local directory to save training results to.
             If ``None`` then Ray default is used
         """
         self.parsed_arguments = argparse.Namespace()
         self.test_run = test_run
-        self.env_name = env_name
         self.local_dir = local_dir
 
     @abstractmethod
@@ -104,8 +102,11 @@ class TrainingHelper(ABC):
         :param arguments_to_parse: command line arguments
             (or explicitly set ones)
         """
-        register_env(self.env_name, self.env_creator)
         self.parse_args(arguments_to_parse)
+        env_name = self.parsed_arguments.prover + os.path.basename(
+            self.parsed_arguments.problem_filename
+        )
+        register_env(env_name, self.env_creator)
         stop_conditions: Dict[str, Any] = (
             {"timesteps_total": 1, "episodes_total": 1}
             if self.test_run
@@ -115,22 +116,21 @@ class TrainingHelper(ABC):
                 else {"episode_reward_mean": 0.99}
             )
         )
-        config = self.get_algorithm_config()
-        dict_config = config.environment(
-            self.env_name,
+        config = self.get_algorithm_config().environment(
+            env_name,
             env_config={
                 "id": f"{self. parsed_arguments.prover}-v0",
                 "max_clauses": self.parsed_arguments.max_clauses,
                 "problem_filename": self.parsed_arguments.problem_filename,
             },
-        ).to_dict()
+        )
         ray.init()
         tuner = tune.Tuner(
             config.algo_class,
             run_config=air.RunConfig(
                 stop=stop_conditions, local_dir=self.local_dir
             ),
-            param_space=dict_config,
+            param_space=config.to_dict(),
         )
         tuner.fit()
         ray.shutdown()
