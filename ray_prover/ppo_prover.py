@@ -71,7 +71,7 @@ class PPOProver(TrainingHelper):
     def __init__(
         self,
         env_name: str,
-        test_run: bool = True,
+        test_run: bool = False,
         local_dir: Optional[str] = None,
     ):
         """
