@@ -126,7 +126,7 @@ class PPOProver(TrainingHelper):
         else:
             config = PPOConfig().training(
                 sgd_minibatch_size=1 if self.test_run else 128,
-                num_sgd_iter=1 if self.test_run else 30,
+                num_sgd_iter=1 if self.test_run else 8,
             )
         return (
             config.environment(
@@ -152,8 +152,9 @@ class PPOProver(TrainingHelper):
                         "action_embed_size": EMBEDDING_DIM,
                     },
                 },
-                train_batch_size=2 if self.test_run else 4000,
+                train_batch_size=2 if self.test_run else 1024,
             )
+            .rollouts(num_rollout_workers=0)
         )
 
 
