@@ -26,7 +26,10 @@ import ray
 from gymnasium import Env
 from ray import air, tune
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
+from ray.rllib.algorithms.callbacks import MultiCallbacks
 from ray.tune.registry import register_env
+
+from ray_prover.terminated_per_file import TerminatedPerFile
 
 
 class TrainingHelper(ABC):
@@ -47,6 +50,7 @@ class TrainingHelper(ABC):
         self.parsed_arguments = argparse.Namespace()
         self.test_run = test_run
         self.local_dir = local_dir
+        self._env_name: Optional[str] = None
 
     @abstractmethod
     def env_creator(self, env_config: Dict[str, Any]) -> Env:
@@ -87,7 +91,7 @@ class TrainingHelper(ABC):
         parser.add_argument(
             "--problem_filename",
             type=str,
-            required=True,
+            required=False,
             help="TPTP problem file name",
         )
         self.parsed_arguments = parser.parse_args(arguments_to_parse)
@@ -103,10 +107,12 @@ class TrainingHelper(ABC):
             (or explicitly set ones)
         """
         self.parse_args(arguments_to_parse)
-        env_name = self.parsed_arguments.prover + os.path.basename(
-            self.parsed_arguments.problem_filename
+        self._env_name = self.parsed_arguments.prover + (
+            os.path.basename(self.parsed_arguments.problem_filename)
+            if self.parsed_arguments.problem_filename
+            else "MultiTask"
         )
-        register_env(env_name, self.env_creator)
+        register_env(self.env_name, self.env_creator)
         stop_conditions: Dict[str, Any] = (
             {"timesteps_total": 1, "episodes_total": 1}
             if self.test_run
@@ -116,13 +122,17 @@ class TrainingHelper(ABC):
                 else {"episode_reward_mean": 0.99}
             )
         )
-        config = self.get_algorithm_config().environment(
-            env_name,
-            env_config={
-                "id": f"{self. parsed_arguments.prover}-v0",
-                "max_clauses": self.parsed_arguments.max_clauses,
-                "problem_filename": self.parsed_arguments.problem_filename,
-            },
+        config = (
+            self.get_algorithm_config()
+            .environment(
+                self.env_name,
+                env_config={
+                    "id": f"{self. parsed_arguments.prover}-v0",
+                    "max_clauses": self.parsed_arguments.max_clauses,
+                    "problem_filename": self.parsed_arguments.problem_filename,
+                },
+            )
+            .callbacks(MultiCallbacks([TerminatedPerFile]))
         )
         ray.init()
         tuner = tune.Tuner(
@@ -138,3 +148,15 @@ class TrainingHelper(ABC):
     @abstractmethod
     def get_algorithm_config(self) -> AlgorithmConfig:
         """Return an algorithm config."""
+
+    @property
+    def env_name(self) -> str:
+        """
+        Environment label.
+
+        :returns: environment name set previously
+        :raises ValueError: if not set previously
+        """
+        if self._env_name:
+            return self._env_name
+        raise ValueError("``env_name`` not set!")
