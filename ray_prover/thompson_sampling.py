@@ -14,164 +14,89 @@
 
 # noqa: D205, D400
 """
-Examples of Thompson sampling
-==============================
+Example Thompson sampling training
+===================================
 """
-import argparse
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-import gymnasium as gym
+import gymnasium
 from gym_saturation.wrappers.age_weight_bandit import AgeWeightBandit
 from gym_saturation.wrappers.constant_parametric_actions import (
     ConstantParametricActionsWrapper,
 )
-from ray.rllib.algorithms.algorithm import Algorithm
+from gymnasium import Env
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.algorithms.bandit import BanditLinTSConfig
-from ray.rllib.examples.policy.random_policy import RandomPolicy
-from ray.rllib.policy.sample_batch import SampleBatch
-from ray.tune.registry import register_env
+
+from ray_prover.random_algorithm import RandomAlgorithm
+from ray_prover.training_helper import TrainingHelper
 
 
-def env_creator(env_config: Dict[str, Any]) -> gym.Env:
+class ThompsonSampling(TrainingHelper):
     """
-    Return a multi-armed-bandit version of a saturation prover.
+    Thompson sampling experiments helper.
 
-    :param env_config: an environment config
-    :returns: an environment
-    """
-    config_copy = env_config.copy()
-    problem_filename = config_copy.pop("problem_filename")
-    env = ConstantParametricActionsWrapper(
-        AgeWeightBandit(gym.make(**config_copy)),
-        avail_actions_key="item",
-    )
-    env.set_task(problem_filename)
-    return env
-
-
-# pylint: disable=abstract-method
-class PatchedRandomPolicy(RandomPolicy):
-    """RandomPolicy from Ray examples misses a couple of methods."""
-
-    # pylint: disable=unused-argument, missing-param-doc
-    def load_batch_into_buffer(
-        self, batch: SampleBatch, buffer_index: int = 0
-    ) -> int:
-        """
-        Don't load anything anywhere.
-
-        :returns: always zero (no samples loaded)
-        """
-        return 0
-
-    # pylint: disable=unused-argument
-    def learn_on_loaded_batch(
-        self, offset: int = 0, buffer_index: int = 0
-    ) -> dict:
-        """
-        Don't learn anything and return empty results.
-
-        :returns: empty dictionary (no metrics computed)
-        """
-        return {}
-
-
-# pylint: disable=too-few-public-methods, abstract-method
-class RandomAlgorithm(Algorithm):
-    """Algorithm taking random actions and not learning anything."""
-
-    # pylint: disable=unused-argument, missing-param-doc
-    @classmethod
-    def get_default_policy_class(cls, config: AlgorithmConfig) -> RandomPolicy:
-        """
-        We created PatchedRandomPolicy exactly for this algorithm.
-
-        :returns: patched random policy
-        """
-        return PatchedRandomPolicy  # type: ignore
-
-
-def parse_args(
-    arguments_to_parse: Optional[List[str]] = None,
-) -> argparse.Namespace:
-    """
-    Parse command line arguments.
-
-    :param arguments_to_parse: command line arguments (or explicitly set ones)
-    :returns: parsed arguments name-space
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--random_baseline",
-        action="store_true",
-        help="Run random baseline instead of training an algorithm",
-    )
-    parser.add_argument(
-        "--prover",
-        choices=["Vampire", "iProver"],
-        required=True,
-        help="Which prover to guide: Vampire or iProver",
-    )
-    parser.add_argument(
-        "--max_clauses",
-        type=int,
-        required=True,
-        help="Maximal number of clauses in the proof state",
-    )
-    parser.add_argument(
-        "--num_iter",
-        type=int,
-        required=True,
-        help="Number of training iterations",
-    )
-    parser.add_argument(
-        "--problem_filename",
-        type=str,
-        required=True,
-        help="TPTP problem file name",
-    )
-    return parser.parse_args(arguments_to_parse)
-
-
-def train_thompson_sampling(
-    arguments_to_parse: Optional[List[str]] = None, test_run: bool = False
-) -> None:
-    """
-    Train Thompson sampling.
-
+    >>> local_dir = getfixture("tmp_path")
     >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
-    ...     "--num_iter", "1", "--problem_filename", MOCK_TPTP_PROBLEM]
-    >>> train_thompson_sampling(test_arguments + ["--random_baseline"], True)
-    >>> train_thompson_sampling(test_arguments, True)
-
-    :param arguments_to_parse: command line arguments (or explicitly set ones)
-    :param test_run: we use light parameters for testing
+    ...     "--problem_filename", MOCK_TPTP_PROBLEM]
+    >>> ThompsonSampling(True, local_dir).train_algorithm(
+    ...     test_arguments + ["--random_baseline"])
+    == Status ==
+     ...
+        hist_stats:
+          episode_lengths:
+          - 1
+     ...
+    <BLANKLINE>
+    >>> ThompsonSampling(True, local_dir).train_algorithm(
+    ...     test_arguments)
+    == Status ==
+     ...
+        hist_stats:
+          episode_lengths:
+          - 1
+     ...
+    <BLANKLINE>
     """
-    parsed_arguments = parse_args(arguments_to_parse)
-    register_env("ProverBandit", env_creator)
-    if parsed_arguments.random_baseline:
-        config = (
-            AlgorithmConfig(RandomAlgorithm)
-            .framework("torch")
-            .rollouts(rollout_fragment_length=1 if test_run else 200)
+
+    def env_creator(
+        self, env_config: Dict[str, Any]
+    ) -> Env:  # pragma: no cover
+        """
+        Return a configured environment.
+
+        :param env_config: an environment config
+        :returns: an environment
+        """
+        config_copy = env_config.copy()
+        problem_filename = config_copy.pop("problem_filename")
+        env = ConstantParametricActionsWrapper(
+            AgeWeightBandit(gymnasium.make(**config_copy)),
+            avail_actions_key="item",
         )
-    else:
-        config = BanditLinTSConfig().reporting(
-            min_sample_timesteps_per_iteration=0 if test_run else 100
-        )
-    algo = config.environment(
-        "ProverBandit",
-        env_config={
-            "id": f"{parsed_arguments.prover}-v0",
-            "max_clauses": parsed_arguments.max_clauses,
-            "problem_filename": parsed_arguments.problem_filename,
-        },
-    ).build()
-    for _ in range(parsed_arguments.num_iter):
-        algo.train()
+        env.set_task(problem_filename)
+        return env
+
+    def get_algorithm_config(self) -> AlgorithmConfig:
+        """
+        Return an algorithm config.
+
+        :returns: algorithm config
+        """
+        if self.parsed_arguments.random_baseline:
+            config = (
+                AlgorithmConfig(RandomAlgorithm)
+                .framework("torch")
+                .rollouts(rollout_fragment_length=1 if self.test_run else 200)
+                .training(train_batch_size=1)
+            )
+        else:
+            config = BanditLinTSConfig().reporting(
+                min_sample_timesteps_per_iteration=0 if self.test_run else 100
+            )
+        return config
 
 
 if __name__ == "__main__":
-    train_thompson_sampling()  # pragma: no cover
+    ThompsonSampling().train_algorithm()  # pragma: no cover

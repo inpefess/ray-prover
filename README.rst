@@ -33,10 +33,10 @@ How to use
 
 .. code:: sh
 	  
-   python ray_prover/thompson_sampling.py --prover Vampire --max_clause 20 --num_iter 20 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p --random_baseline
-   python ray_prover/thompson_sampling.py --prover Vampire --max_clause 20 --num_iter 20 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p
-   python ray_prover/ppo_prover.py --prover Vampire --max_clause 20 --num_iter 10 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p --random_baseline
-   python ray_prover/ppo_prover.py --prover Vampire --max_clause 20 --num_iter 10 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p
+   python ray_prover/thompson_sampling.py --prover Vampire --max_clause 20 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p --random_baseline
+   python ray_prover/thompson_sampling.py --prover Vampire --max_clause 20 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p
+   python ray_prover/ppo_prover.py --prover Vampire --max_clause 20 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p --random_baseline
+   python ray_prover/ppo_prover.py --prover Vampire --max_clause 20 --problem_filename ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p
 
 .. |CircleCI| image:: https://circleci.com/gh/inpefess/ray-prover.svg?style=svg
    :target: https://circleci.com/gh/inpefess/ray-prover
