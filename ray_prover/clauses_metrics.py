@@ -14,23 +14,21 @@
 
 # noqa: D205, D400
 """
-Terminated per file Callback
+Clauses metrics Callback
 =============================
 """
-import os
 from typing import Dict, Optional
 
+from gym_saturation.envs.saturation_env import SaturationEnv
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
 from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import RolloutWorker
 from ray.rllib.evaluation.episode_v2 import EpisodeV2
 from ray.rllib.policy import Policy
 
-from ray_prover.constants import PROBLEM_FILENAME
 
-
-class TerminatedPerFile(DefaultCallbacks):
-    """Terminated per file callback."""
+class ClausesMetrics(DefaultCallbacks):
+    """Clauses metrics callback."""
 
     def on_episode_end(
         self,
@@ -64,11 +62,11 @@ class TerminatedPerFile(DefaultCallbacks):
             episode (within the vector of sub-environments of the BaseEnv).
         :param kwargs: Forward compatibility placeholder.
         """
-        agent_id = episode.get_agents()[0]
-        problem_filename = os.path.splitext(
-            # pylint: disable=protected-access
-            os.path.basename(episode._last_infos[agent_id][PROBLEM_FILENAME])
-        )[0]
-        episode.custom_metrics[f"terminated/{problem_filename}"] = (
-            1.0 if episode.is_terminated(agent_id) else 0.0
+        env: SaturationEnv = base_env.get_sub_environments()[0]
+        episode.custom_metrics["steps_attempted"] = env.state.step_number + (
+            1 if env.state.terminated else 0
+        )
+        episode.custom_metrics["clauses_generated"] = len(env.state.clauses)
+        episode.custom_metrics["chars_generated"] = sum(
+            len(clause["literals"]) for clause in env.state.clauses
         )

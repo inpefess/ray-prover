@@ -33,9 +33,7 @@ from ray.rllib.examples.random_parametric_agent import (
 )
 from ray.rllib.models import ModelCatalog
 
-from ray_prover.constants import PROBLEM_FILENAME, SET_PROBLEMS
-from ray_prover.multi_task_wrapper import MultiTaskWrapper
-from ray_prover.problem_filename_wrapper import ProblemFilenameWrapper
+from ray_prover.constants import PROBLEM_FILENAME
 from ray_prover.training_helper import TrainingHelper
 
 EMBEDDING_DIM = 256
@@ -99,25 +97,21 @@ class PPOProver(TrainingHelper):
         """
         config_copy = env_config.copy()
         problem_filename = config_copy.pop(PROBLEM_FILENAME)
-        env = MultiTaskWrapper(
-            ProblemFilenameWrapper(
-                DuplicateKeyObsWrapper(
-                    AST2VecWrapper(
-                        gymnasium.make(**config_copy).unwrapped,
-                        features_num=EMBEDDING_DIM,
-                    ),
-                    # ``ParametricActionsModel`` expects a key 'cart' (from the
-                    # CartPole environment) to be present in the observation
-                    # dictionary. We add such a key and use 'avail_actions' as
-                    # its value, since in case of the given clause algorithm,
-                    # the clauses to choose from are both actions and
-                    # observations.
-                    new_key="cart",
-                    key_to_duplicate="avail_actions",
-                )
+        env = DuplicateKeyObsWrapper(
+            AST2VecWrapper(
+                gymnasium.make(**config_copy).unwrapped,
+                features_num=EMBEDDING_DIM,
             ),
-            [problem_filename] if problem_filename else SET_PROBLEMS,
+            # ``ParametricActionsModel`` expects a key 'cart' (from the
+            # CartPole environment) to be present in the observation
+            # dictionary. We add such a key and use 'avail_actions' as
+            # its value, since in case of the given clause algorithm,
+            # the clauses to choose from are both actions and
+            # observations.
+            new_key="cart",
+            key_to_duplicate="avail_actions",
         )
+        env.set_task(problem_filename)
         return env
 
     def get_algorithm_config(self) -> AlgorithmConfig:
@@ -137,7 +131,7 @@ class PPOProver(TrainingHelper):
             )
         return (
             config.environment(
-                self.env_name,
+                self.env_id,
                 env_config={
                     "id": f"{self.parsed_arguments.prover}-v0",
                     "max_clauses": self.parsed_arguments.max_clauses,
@@ -145,6 +139,7 @@ class PPOProver(TrainingHelper):
                 },
                 # https://github.com/ray-project/ray/issues/23925
                 disable_env_checking=True,
+                # env_task_fn=curriculum_fn,
             )
             .framework("torch")
             .training(
