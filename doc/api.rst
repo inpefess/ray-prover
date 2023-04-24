@@ -21,7 +21,9 @@ API documentation
    :members:
 .. automodule:: ray_prover.training_helper
    :members:
-.. automodule:: ray_prover.thompson_sampling
-   :members:
 .. automodule:: ray_prover.ppo_prover
+   :members:
+.. automodule:: ray_prover.curriculum
+   :members:
+.. automodule:: ray_prover.custom_stopper
    :members:

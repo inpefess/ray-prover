@@ -17,6 +17,7 @@
 Clauses metrics Callback
 =============================
 """
+import os
 from typing import Dict, Optional
 
 from gym_saturation.envs.saturation_env import SaturationEnv
@@ -63,10 +64,16 @@ class ClausesMetrics(DefaultCallbacks):
         :param kwargs: Forward compatibility placeholder.
         """
         env: SaturationEnv = base_env.get_sub_environments()[0]
-        episode.custom_metrics["steps_attempted"] = env.state.step_number + (
-            1 if env.state.terminated else 0
+        task = os.path.splitext(os.path.basename(env.get_task()))[0]
+        episode.custom_metrics[
+            f"{task}/steps_attempted"
+        ] = env.state.step_number + (1 if env.state.terminated else 0)
+        episode.custom_metrics[f"{task}/clauses_generated"] = len(
+            env.state.clauses
         )
-        episode.custom_metrics["clauses_generated"] = len(env.state.clauses)
-        episode.custom_metrics["chars_generated"] = sum(
+        episode.custom_metrics[f"{task}/chars_generated"] = sum(
             len(clause["literals"]) for clause in env.state.clauses
+        )
+        episode.custom_metrics[f"{task}/terminated"] = (
+            1 if env.state.terminated else 0
         )

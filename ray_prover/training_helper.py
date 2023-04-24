@@ -20,7 +20,7 @@ Training Helper
 import argparse
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import ray
 from gymnasium import Env
@@ -28,8 +28,10 @@ from ray import air, tune
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.algorithms.callbacks import MultiCallbacks
 from ray.tune.registry import register_env
+from ray.tune.stopper import Stopper
 
 from ray_prover.clauses_metrics import ClausesMetrics
+from ray_prover.custom_stopper import CustomStopper
 
 
 class TrainingHelper(ABC):
@@ -91,10 +93,34 @@ class TrainingHelper(ABC):
         parser.add_argument(
             "--problem_filename",
             type=str,
-            required=False,
+            required=True,
             help="TPTP problem file name",
         )
+        parser.add_argument(
+            "--second_problem_filename",
+            type=str,
+            required=False,
+            help="a harder problem to solve next",
+        )
         self.parsed_arguments = parser.parse_args(arguments_to_parse)
+
+    def _get_stop_conditions(self) -> Union[Dict[str, Any], Stopper]:
+        last_task = os.path.splitext(
+            os.path.basename(
+                self.parsed_arguments.second_problem_filename
+                if self.parsed_arguments.second_problem_filename
+                else self.parsed_arguments.problem_filename
+            )
+        )[0]
+        return (
+            {"timesteps_total": 1, "episodes_total": 1}
+            if self.test_run
+            else (
+                {"episodes_total": 100}
+                if self.parsed_arguments.random_baseline
+                else CustomStopper(last_task)
+            )
+        )
 
     def train_algorithm(
         self,
@@ -112,15 +138,6 @@ class TrainingHelper(ABC):
             + os.path.basename(self.parsed_arguments.problem_filename)[:-2]
         )
         register_env(self.env_id, self.env_creator)
-        stop_conditions: Dict[str, Any] = (
-            {"timesteps_total": 1, "episodes_total": 1}
-            if self.test_run
-            else (
-                {"episodes_total": 100}
-                if self.parsed_arguments.random_baseline
-                else {"episode_reward_mean": 0.99}
-            )
-        )
         config = (
             self.get_algorithm_config()
             .environment(
@@ -137,7 +154,7 @@ class TrainingHelper(ABC):
         tuner = tune.Tuner(
             config.algo_class,
             run_config=air.RunConfig(
-                stop=stop_conditions, local_dir=self.local_dir
+                stop=self._get_stop_conditions(), local_dir=self.local_dir
             ),
             param_space=config.to_dict(),
         )

@@ -17,6 +17,7 @@
 PPO example
 ============
 """
+from functools import partial
 from typing import Any, Dict, Optional
 
 import gymnasium
@@ -34,6 +35,7 @@ from ray.rllib.examples.random_parametric_agent import (
 from ray.rllib.models import ModelCatalog
 
 from ray_prover.constants import PROBLEM_FILENAME
+from ray_prover.curriculum import curriculum_fn
 from ray_prover.training_helper import TrainingHelper
 
 EMBEDDING_DIM = 256
@@ -139,7 +141,10 @@ class PPOProver(TrainingHelper):
                 },
                 # https://github.com/ray-project/ray/issues/23925
                 disable_env_checking=True,
-                # env_task_fn=curriculum_fn,
+                env_task_fn=partial(
+                    curriculum_fn,
+                    self.parsed_arguments.second_problem_filename,
+                ),
             )
             .framework("torch")
             .training(
