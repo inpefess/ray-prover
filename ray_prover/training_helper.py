@@ -26,11 +26,11 @@ import ray
 from gymnasium import Env
 from ray import air, tune
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
-from ray.rllib.algorithms.callbacks import MultiCallbacks
+from ray.rllib.algorithms.callbacks import make_multi_callbacks
 from ray.tune.registry import register_env
 from ray.tune.stopper import Stopper
 
-from ray_prover.clauses_metrics import ClausesMetrics
+from ray_prover.clauses_metrics import ClauseMetrics
 from ray_prover.custom_stopper import CustomStopper
 
 
@@ -148,7 +148,7 @@ class TrainingHelper(ABC):
                     "problem_filename": self.parsed_arguments.problem_filename,
                 },
             )
-            .callbacks(MultiCallbacks([ClausesMetrics]))
+            .callbacks(make_multi_callbacks([ClauseMetrics]))
         )
         ray.init()
         tuner = tune.Tuner(

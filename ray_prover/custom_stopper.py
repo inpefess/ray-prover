@@ -39,7 +39,10 @@ class CustomStopper(Stopper):
         """
         custom_metric = f"{self.last_task}/terminated_mean"
         if custom_metric in result["custom_metrics"]:
-            return result["custom_metrics"][custom_metric] >= 0.99
+            return result["custom_metrics"][custom_metric] >= 0.99 or (
+                result["episode_reward_mean"] < 0.01
+                and result["timesteps_total"] > 10000
+            )
         return False
 
     def stop_all(self) -> bool:

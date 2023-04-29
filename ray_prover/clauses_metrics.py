@@ -28,8 +28,8 @@ from ray.rllib.evaluation.episode_v2 import EpisodeV2
 from ray.rllib.policy import Policy
 
 
-class ClausesMetrics(DefaultCallbacks):
-    """Clauses metrics callback."""
+class ClauseMetrics(DefaultCallbacks):
+    """Clause metrics callback."""
 
     def on_episode_end(
         self,
@@ -40,7 +40,7 @@ class ClausesMetrics(DefaultCallbacks):
         episode: EpisodeV2,
         env_index: Optional[int],
         **kwargs,
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """
         Run when an episode is done.
 
