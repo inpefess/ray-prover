@@ -17,10 +17,15 @@
 Random Policy and Algorithm
 ============================
 """
+from typing import List, Optional, Tuple, Union
+
+import numpy as np
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.examples.policy.random_policy import RandomPolicy
+from ray.rllib.models.modelv2 import restore_original_dimensions
 from ray.rllib.policy.sample_batch import SampleBatch
+from ray.rllib.utils.typing import TensorStructType, TensorType
 
 
 # pylint: disable=abstract-method
@@ -48,6 +53,54 @@ class PatchedRandomPolicy(RandomPolicy):
         :returns: empty dictionary (no metrics computed)
         """
         return {}  # pragma: no cover
+
+    def compute_actions(
+        self,
+        obs_batch: Union[List[TensorStructType], TensorStructType],
+        state_batches: Optional[List[TensorType]] = None,
+        prev_action_batch: Union[
+            List[TensorStructType], TensorStructType
+        ] = None,
+        prev_reward_batch: Union[
+            List[TensorStructType], TensorStructType
+        ] = None,
+        **kwargs,
+    ) -> Tuple[list, list, dict]:
+        """
+        Compute actions for the current policy.
+
+        :param obs_batch: Batch of observations.
+        :param state_batches: List of RNN state input batches, if any.
+        :param prev_action_batch: Batch of previous action values.
+        :param prev_reward_batch: Batch of previous rewards.
+        :param kwargs: Forward compatibility placeholder
+
+        :returns:
+            actions: Batch of output actions, with shape like
+                [BATCH_SIZE, ACTION_SHAPE].
+            state_outs (List[TensorType]): List of RNN state output
+                batches, if any, each with shape [BATCH_SIZE, STATE_SIZE].
+            info (List[dict]): Dictionary of extra feature batches, if any,
+                with shape like
+                {"f1": [BATCH_SIZE, ...], "f2": [BATCH_SIZE, ...]}.
+        """
+        real_obs = restore_original_dimensions(
+            obs_batch,
+            self.observation_space,
+            tensorlib=np,
+        )
+        return (
+            [
+                self.action_space_for_sampling.sample(
+                    mask=real_obs["action_mask"][i].astype(np.int8)
+                    if "action_mask" in real_obs
+                    else None
+                )
+                for i in range(len(obs_batch))
+            ],
+            [],
+            {},
+        )
 
 
 # pylint: disable=too-few-public-methods, abstract-method

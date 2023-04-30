@@ -20,16 +20,18 @@ Training Helper
 import argparse
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import ray
 from gymnasium import Env
 from ray import air, tune
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
-from ray.rllib.algorithms.callbacks import MultiCallbacks
+from ray.rllib.algorithms.callbacks import make_multi_callbacks
 from ray.tune.registry import register_env
+from ray.tune.stopper import Stopper
 
-from ray_prover.terminated_per_file import TerminatedPerFile
+from ray_prover.clauses_metrics import ClauseMetrics
+from ray_prover.custom_stopper import CustomStopper
 
 
 class TrainingHelper(ABC):
@@ -50,7 +52,7 @@ class TrainingHelper(ABC):
         self.parsed_arguments = argparse.Namespace()
         self.test_run = test_run
         self.local_dir = local_dir
-        self._env_name: Optional[str] = None
+        self._env_id: Optional[str] = None
 
     @abstractmethod
     def env_creator(self, env_config: Dict[str, Any]) -> Env:
@@ -91,10 +93,34 @@ class TrainingHelper(ABC):
         parser.add_argument(
             "--problem_filename",
             type=str,
-            required=False,
+            required=True,
             help="TPTP problem file name",
         )
+        parser.add_argument(
+            "--second_problem_filename",
+            type=str,
+            required=False,
+            help="a harder problem to solve next",
+        )
         self.parsed_arguments = parser.parse_args(arguments_to_parse)
+
+    def _get_stop_conditions(self) -> Union[Dict[str, Any], Stopper]:
+        last_task = os.path.splitext(
+            os.path.basename(
+                self.parsed_arguments.second_problem_filename
+                if self.parsed_arguments.second_problem_filename
+                else self.parsed_arguments.problem_filename
+            )
+        )[0]
+        return (
+            {"timesteps_total": 1, "episodes_total": 1}
+            if self.test_run
+            else (
+                {"timesteps_total": 44000}
+                if self.parsed_arguments.random_baseline
+                else CustomStopper(last_task)
+            )
+        )
 
     def train_algorithm(
         self,
@@ -107,38 +133,28 @@ class TrainingHelper(ABC):
             (or explicitly set ones)
         """
         self.parse_args(arguments_to_parse)
-        self._env_name = self.parsed_arguments.prover + (
-            os.path.basename(self.parsed_arguments.problem_filename)
-            if self.parsed_arguments.problem_filename
-            else "MultiTask"
+        self._env_id = (
+            self.parsed_arguments.prover
+            + os.path.basename(self.parsed_arguments.problem_filename)[:-2]
         )
-        register_env(self.env_name, self.env_creator)
-        stop_conditions: Dict[str, Any] = (
-            {"timesteps_total": 1, "episodes_total": 1}
-            if self.test_run
-            else (
-                {"episodes_total": 100}
-                if self.parsed_arguments.random_baseline
-                else {"episode_reward_mean": 0.99}
-            )
-        )
+        register_env(self.env_id, self.env_creator)
         config = (
             self.get_algorithm_config()
             .environment(
-                self.env_name,
+                self.env_id,
                 env_config={
                     "id": f"{self. parsed_arguments.prover}-v0",
                     "max_clauses": self.parsed_arguments.max_clauses,
                     "problem_filename": self.parsed_arguments.problem_filename,
                 },
             )
-            .callbacks(MultiCallbacks([TerminatedPerFile]))
+            .callbacks(make_multi_callbacks([ClauseMetrics]))
         )
         ray.init()
         tuner = tune.Tuner(
             config.algo_class,
             run_config=air.RunConfig(
-                stop=stop_conditions, local_dir=self.local_dir
+                stop=self._get_stop_conditions(), local_dir=self.local_dir
             ),
             param_space=config.to_dict(),
         )
@@ -150,13 +166,13 @@ class TrainingHelper(ABC):
         """Return an algorithm config."""
 
     @property
-    def env_name(self) -> str:
+    def env_id(self) -> str:
         """
         Environment label.
 
         :returns: environment name set previously
         :raises ValueError: if not set previously
         """
-        if self._env_name:
-            return self._env_name
-        raise ValueError("``env_name`` not set!")
+        if self._env_id:
+            return self._env_id
+        raise ValueError("``env_id`` not set!")

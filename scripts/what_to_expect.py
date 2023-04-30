@@ -32,7 +32,7 @@ def process_problem(problem: str) -> None:
     :param problem: problem number
     """
     env: SaturationEnv = gymnasium.make(
-        "Vampire-v0", max_clauses=15000
+        "iProver-v0", max_clauses=15000
     )  # type: ignore
     env.set_task(
         os.path.join(
@@ -44,7 +44,7 @@ def process_problem(problem: str) -> None:
             f"SET0{problem}-1.p",
         )
     )
-    _, _, steps = episode(env, AgeWeightAgent(1, 5))
+    _, _, steps = episode(env, AgeWeightAgent(1, 10))
     proof = {
         clause["label"] for clause in reduce_to_proof(tuple(env.state.clauses))
     }
@@ -68,10 +68,11 @@ def process_problem(problem: str) -> None:
         "&",
         sum(clauses_in_proof),
         "\\\\",
+        flush=True,
     )
-    print("\\hline")
+    print("\\hline", flush=True)
 
 
 if __name__ == "__main__":
-    for problem_code in [f"0{i}" for i in range(1, 10)] + ["10", "11"]:
+    for problem_code in "01 03 04 06 02 09 08 05 10 07 11".split(" "):
         process_problem(problem_code)

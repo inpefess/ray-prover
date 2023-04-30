@@ -88,7 +88,7 @@ class ThompsonSampling(TrainingHelper):
             config = (
                 AlgorithmConfig(RandomAlgorithm)
                 .framework("torch")
-                .rollouts(rollout_fragment_length=1 if self.test_run else 200)
+                .rollouts(rollout_fragment_length=1 if self.test_run else 100)
                 .training(train_batch_size=1)
             )
         else:
