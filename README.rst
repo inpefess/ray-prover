@@ -26,7 +26,7 @@ How to install
 
 .. code:: sh
 
-   pip install git+https://github.com/inpefess/basic-rl-prover.git
+   pip install git+https://github.com/inpefess/ray-prover.git
 
 How to use
 ***********
