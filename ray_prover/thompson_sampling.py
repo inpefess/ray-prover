@@ -88,12 +88,12 @@ class ThompsonSampling(TrainingHelper):
             config = (
                 AlgorithmConfig(RandomAlgorithm)
                 .framework("torch")
-                .rollouts(rollout_fragment_length=1 if self.test_run else 200)
+                .rollouts(rollout_fragment_length=1 if self.test_run else 100)
                 .training(train_batch_size=1)
             )
         else:
             config = BanditLinTSConfig().reporting(
-                min_sample_timesteps_per_iteration=0 if self.test_run else 64
+                min_sample_timesteps_per_iteration=0 if self.test_run else 100
             )
         return config
 
