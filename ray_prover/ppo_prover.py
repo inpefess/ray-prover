@@ -29,13 +29,11 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.examples.parametric_actions_cartpole import (
     TorchParametricActionsModel,
 )
-from ray.rllib.examples.random_parametric_agent import (
-    RandomParametricAlgorithm,
-)
 from ray.rllib.models import ModelCatalog
 
 from ray_prover.constants import PROBLEM_FILENAME
 from ray_prover.curriculum import curriculum_fn
+from ray_prover.random_algorithm import RandomAlgorithm
 from ray_prover.training_helper import TrainingHelper
 
 EMBEDDING_DIM = 256
@@ -123,13 +121,13 @@ class PPOProver(TrainingHelper):
         :returns: algorithm config
         """
         if self.parsed_arguments.random_baseline:
-            config = AlgorithmConfig(RandomParametricAlgorithm).rollouts(
-                rollout_fragment_length=1 if self.test_run else 200
+            config = AlgorithmConfig(RandomAlgorithm).rollouts(
+                rollout_fragment_length=1 if self.test_run else 4000
             )
         else:
             config = PPOConfig().training(
                 sgd_minibatch_size=1 if self.test_run else 128,
-                num_sgd_iter=1 if self.test_run else 8,
+                num_sgd_iter=1 if self.test_run else 30,
             )
         return (
             config.environment(
@@ -158,7 +156,7 @@ class PPOProver(TrainingHelper):
                         "action_embed_size": EMBEDDING_DIM,
                     },
                 },
-                train_batch_size=2 if self.test_run else 1024,
+                train_batch_size=2 if self.test_run else 4000,
             )
             .rollouts(num_rollout_workers=0)
         )

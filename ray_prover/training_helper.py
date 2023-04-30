@@ -116,7 +116,7 @@ class TrainingHelper(ABC):
             {"timesteps_total": 1, "episodes_total": 1}
             if self.test_run
             else (
-                {"episodes_total": 100}
+                {"timesteps_total": 44000}
                 if self.parsed_arguments.random_baseline
                 else CustomStopper(last_task)
             )

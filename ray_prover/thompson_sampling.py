@@ -93,7 +93,7 @@ class ThompsonSampling(TrainingHelper):
             )
         else:
             config = BanditLinTSConfig().reporting(
-                min_sample_timesteps_per_iteration=0 if self.test_run else 100
+                min_sample_timesteps_per_iteration=0 if self.test_run else 64
             )
         return config
 

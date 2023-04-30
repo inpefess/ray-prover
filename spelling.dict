@@ -5,3 +5,5 @@ pragma
 PPO
 BLANKLINE
 kwargs
+RNN
+TensorType
