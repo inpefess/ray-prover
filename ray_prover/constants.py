@@ -17,17 +17,4 @@
 Common constants
 =================
 """
-import os
-
 PROBLEM_FILENAME = "problem_filename"
-SET_PROBLEMS = [
-    os.path.join(
-        os.environ["WORK"],
-        "data",
-        "TPTP-v8.1.2",
-        "Problems",
-        "SET",
-        f"SET0{num}-1.p",
-    )
-    for num in [f"0{i}" for i in range(1, 10)] + ["10", "11"]
-]
