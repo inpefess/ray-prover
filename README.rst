@@ -24,6 +24,8 @@ Generic saturation prover using Ray RLlib.
 How to install
 ***************
 
+``ray-prover`` works only with Python 3.8, 3.9 or 3.10
+
 .. code:: sh
 
    pip install git+https://github.com/inpefess/ray-prover.git
