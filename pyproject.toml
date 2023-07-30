@@ -27,10 +27,10 @@ python = ">= 3.8.1, < 3.11"
 gym-saturation = "*"
 ray = {version = "*", extras = ["rllib"]}
 tensorflow-probability = "*"
-torch = "*"
+torch = "<2.0.1"
 tensorboard = "*"
 gputil = "*"
-protobuf = "<3.21"
+protobuf = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
