@@ -36,11 +36,11 @@ class ThompsonSampling(TrainingHelper):
     """
     Thompson sampling experiments helper.
 
-    >>> local_dir = getfixture("tmp_path")
+    >>> storage_path = getfixture("tmp_path")
     >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
     ...     "--problem_filename", MOCK_TPTP_PROBLEM]
-    >>> ThompsonSampling(True, local_dir).train_algorithm(
+    >>> ThompsonSampling(True, storage_path).train_algorithm(
     ...     test_arguments + ["--random_baseline"])
     ╭─...
     ...
@@ -54,7 +54,7 @@ class ThompsonSampling(TrainingHelper):
     │ sampler_results/episode_reward_mean    0 │
     ╰──────────────────────────────────────────╯
     ...
-    >>> ThompsonSampling(True, local_dir).train_algorithm(
+    >>> ThompsonSampling(True, storage_path).train_algorithm(
     ...     test_arguments)
     ╭─...
     ...
