@@ -26,11 +26,7 @@ include = ["ray_prover/py.typed"]
 python = ">= 3.8.1, < 3.11"
 gym-saturation = "*"
 ray = {version = "*", extras = ["rllib"]}
-tensorflow-probability = "*"
 torch = "<2.0.1"
-tensorboard = "*"
-gputil = "*"
-protobuf = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
@@ -47,8 +43,6 @@ flake8 = "*"
 toml = "*"
 furo = "*"
 sphinx-gallery = "*"
-pillow = "*"
-matplotlib = "*"
 jedi = "*"
 
 [tool.black]
