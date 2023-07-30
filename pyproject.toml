@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ray-prover"
-version = "0.0.3"
+version = "0.0.4"
 description = "Generic saturation prover using Ray RLlib"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -26,15 +26,10 @@ include = ["ray_prover/py.typed"]
 python = ">= 3.8.1, < 3.11"
 gym-saturation = "*"
 ray = {version = "*", extras = ["rllib"]}
-tensorflow-probability = "*"
-torch = "*"
-tensorboard = "*"
-gputil = "*"
-protobuf = "<3.21"
+torch = "<2.0.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
-jupyterlab = "*"
 mypy = "*"
 pylint = "*"
 pytest-coverage = "*"
@@ -48,8 +43,7 @@ flake8 = "*"
 toml = "*"
 furo = "*"
 sphinx-gallery = "*"
-pillow = "*"
-matplotlib = "*"
+jedi = "*"
 
 [tool.black]
 line-length=79
@@ -106,14 +100,14 @@ disable_error_code = "no-redef"
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["importlib_resources", "enchant.*"]
+module = ["importlib_resources", "enchant.*", "IPython.display"]
 ignore_missing_imports = true
 
 [tool.tox]
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py38,py39,py310,py311
+envlist = py38,py39,py310
 
 [testenv]
 deps =
@@ -136,7 +130,7 @@ commands =
 github_url = "https://github.com/inpfess/ray-prover/"
 
 [tool.tbump.version]
-current = "0.0.3"
+current = "0.0.4"
 regex = '''
   (?P<major>\d+)
   \.

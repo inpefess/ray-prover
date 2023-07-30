@@ -36,28 +36,38 @@ class ThompsonSampling(TrainingHelper):
     """
     Thompson sampling experiments helper.
 
-    >>> local_dir = getfixture("tmp_path")
+    >>> storage_path = getfixture("tmp_path")
     >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
     ...     "--problem_filename", MOCK_TPTP_PROBLEM]
-    >>> ThompsonSampling(True, local_dir).train_algorithm(
+    >>> ThompsonSampling(True, storage_path).train_algorithm(
     ...     test_arguments + ["--random_baseline"])
-    == Status ==
-     ...
-        hist_stats:
-          episode_lengths:
-          - 1
-     ...
-    <BLANKLINE>
-    >>> ThompsonSampling(True, local_dir).train_algorithm(
+    ╭─...
+    ...
+    ╭──────────────────────────────────────────╮
+    │ Training result                          │
+    ├──────────────────────────────────────────┤
+    │ episodes_total                         1 │
+    │ num_env_steps_sampled                  1 │
+    │ num_env_steps_trained                  1 │
+    │ sampler_results/episode_len_mean       1 │
+    │ sampler_results/episode_reward_mean    0 │
+    ╰──────────────────────────────────────────╯
+    ...
+    >>> ThompsonSampling(True, storage_path).train_algorithm(
     ...     test_arguments)
-    == Status ==
-     ...
-        hist_stats:
-          episode_lengths:
-          - 1
-     ...
-    <BLANKLINE>
+    ╭─...
+    ...
+    ╭──────────────────────────────────────────╮
+    │ Training result                          │
+    ├──────────────────────────────────────────┤
+    │ episodes_total                         1 │
+    │ num_env_steps_sampled                  1 │
+    │ num_env_steps_trained                  1 │
+    │ sampler_results/episode_len_mean       1 │
+    │ sampler_results/episode_reward_mean    0 │
+    ╰──────────────────────────────────────────╯
+    ...
     """
 
     def env_creator(

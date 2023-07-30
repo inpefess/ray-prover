@@ -40,18 +40,18 @@ class TrainingHelper(ABC):
     def __init__(
         self,
         test_run: bool = False,
-        local_dir: Optional[str] = None,
+        storage_path: Optional[str] = None,
     ):
         """
         Initialise all.
 
         :param test_run: we use light parameters for testing
-        :param local_dir: local directory to save training results to.
+        :param storage_path: local directory to save training results to.
             If ``None`` then Ray default is used
         """
         self.parsed_arguments = argparse.Namespace()
         self.test_run = test_run
-        self.local_dir = local_dir
+        self.storage_path = storage_path
         self._env_id: Optional[str] = None
 
     @abstractmethod
@@ -154,7 +154,8 @@ class TrainingHelper(ABC):
         tuner = tune.Tuner(
             config.algo_class,
             run_config=air.RunConfig(
-                stop=self._get_stop_conditions(), local_dir=self.local_dir
+                stop=self._get_stop_conditions(),
+                storage_path=self.storage_path,
             ),
             param_space=config.to_dict(),
         )

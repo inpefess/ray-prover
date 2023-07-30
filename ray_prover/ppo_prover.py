@@ -43,27 +43,37 @@ class PPOProver(TrainingHelper):
     """
     PPO-based prover experiments helper.
 
-    >>> local_dir = getfixture("tmp_path")
+    >>> storage_path = getfixture("tmp_path")
     >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
     ...     "--problem_filename", MOCK_TPTP_PROBLEM]
-    >>> PPOProver(True, local_dir).train_algorithm(
+    >>> PPOProver(True, storage_path).train_algorithm(
     ...     test_arguments + ["--random_baseline"])
-    == Status ==
-     ...
-        hist_stats:
-          episode_lengths:
-          - 1
-     ...
-    <BLANKLINE>
-    >>> PPOProver(True, local_dir).train_algorithm(test_arguments)
-    == Status ==
-     ...
-        hist_stats:
-          episode_lengths:
-          - 1
-     ...
-    <BLANKLINE>
+    ╭─...
+    ...
+    ╭──────────────────────────────────────────╮
+    │ Training result                          │
+    ├──────────────────────────────────────────┤
+    │ episodes_total                         2 │
+    │ num_env_steps_sampled                  2 │
+    │ num_env_steps_trained                  2 │
+    │ sampler_results/episode_len_mean       1 │
+    │ sampler_results/episode_reward_mean    0 │
+    ╰──────────────────────────────────────────╯
+    ...
+    >>> PPOProver(True, storage_path).train_algorithm(test_arguments)
+    ╭─...
+    ...
+    ╭──────────────────────────────────────────╮
+    │ Training result                          │
+    ├──────────────────────────────────────────┤
+    │ episodes_total                         2 │
+    │ num_env_steps_sampled                  2 │
+    │ num_env_steps_trained                  0 │
+    │ sampler_results/episode_len_mean       1 │
+    │ sampler_results/episode_reward_mean    0 │
+    ╰──────────────────────────────────────────╯
+    ...
 
     :param arguments_to_parse: command line arguments (or explicitly set ones)
     :param test_run: we use light parameters for testing
@@ -72,16 +82,16 @@ class PPOProver(TrainingHelper):
     def __init__(
         self,
         test_run: bool = False,
-        local_dir: Optional[str] = None,
+        storage_path: Optional[str] = None,
     ):
         """
         Initialise all.
 
         :param test_run: we use light parameters for testing
-        :param local_dir: local directory to save training results to.
+        :param storage_path: local directory to save training results to.
             If ``None`` then Ray default is used
         """
-        super().__init__(test_run, local_dir)
+        super().__init__(test_run, storage_path)
         ModelCatalog.register_custom_model(
             "pa_model", TorchParametricActionsModel
         )

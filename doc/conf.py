@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "ray-prover"
 copyright = "2023, Boris Shminke"
 author = "Boris Shminke"
-release = "0.0.3"
+release = "0.0.4"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
