@@ -34,7 +34,6 @@ protobuf = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
-jupyterlab = "*"
 mypy = "*"
 pylint = "*"
 pytest-coverage = "*"
@@ -106,7 +105,7 @@ disable_error_code = "no-redef"
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["importlib_resources", "enchant.*"]
+module = ["importlib_resources", "enchant.*", "IPython.display"]
 ignore_missing_imports = true
 
 [tool.tox]
