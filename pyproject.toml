@@ -49,6 +49,7 @@ furo = "*"
 sphinx-gallery = "*"
 pillow = "*"
 matplotlib = "*"
+jedi = "*"
 
 [tool.black]
 line-length=79
