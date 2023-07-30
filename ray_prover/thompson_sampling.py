@@ -42,22 +42,32 @@ class ThompsonSampling(TrainingHelper):
     ...     "--problem_filename", MOCK_TPTP_PROBLEM]
     >>> ThompsonSampling(True, local_dir).train_algorithm(
     ...     test_arguments + ["--random_baseline"])
-    == Status ==
-     ...
-        hist_stats:
-          episode_lengths:
-          - 1
-     ...
-    <BLANKLINE>
+    ╭─...
+    ...
+    ╭──────────────────────────────────────────╮
+    │ Training result                          │
+    ├──────────────────────────────────────────┤
+    │ episodes_total                         1 │
+    │ num_env_steps_sampled                  1 │
+    │ num_env_steps_trained                  1 │
+    │ sampler_results/episode_len_mean       1 │
+    │ sampler_results/episode_reward_mean    0 │
+    ╰──────────────────────────────────────────╯
+    ...
     >>> ThompsonSampling(True, local_dir).train_algorithm(
     ...     test_arguments)
-    == Status ==
-     ...
-        hist_stats:
-          episode_lengths:
-          - 1
-     ...
-    <BLANKLINE>
+    ╭─...
+    ...
+    ╭──────────────────────────────────────────╮
+    │ Training result                          │
+    ├──────────────────────────────────────────┤
+    │ episodes_total                         1 │
+    │ num_env_steps_sampled                  1 │
+    │ num_env_steps_trained                  1 │
+    │ sampler_results/episode_len_mean       1 │
+    │ sampler_results/episode_reward_mean    0 │
+    ╰──────────────────────────────────────────╯
+    ...
     """
 
     def env_creator(

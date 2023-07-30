@@ -49,21 +49,31 @@ class PPOProver(TrainingHelper):
     ...     "--problem_filename", MOCK_TPTP_PROBLEM]
     >>> PPOProver(True, local_dir).train_algorithm(
     ...     test_arguments + ["--random_baseline"])
-    == Status ==
-     ...
-        hist_stats:
-          episode_lengths:
-          - 1
-     ...
-    <BLANKLINE>
+    ╭─...
+    ...
+    ╭──────────────────────────────────────────╮
+    │ Training result                          │
+    ├──────────────────────────────────────────┤
+    │ episodes_total                         2 │
+    │ num_env_steps_sampled                  2 │
+    │ num_env_steps_trained                  2 │
+    │ sampler_results/episode_len_mean       1 │
+    │ sampler_results/episode_reward_mean    0 │
+    ╰──────────────────────────────────────────╯
+    ...
     >>> PPOProver(True, local_dir).train_algorithm(test_arguments)
-    == Status ==
-     ...
-        hist_stats:
-          episode_lengths:
-          - 1
-     ...
-    <BLANKLINE>
+    ╭─...
+    ...
+    ╭──────────────────────────────────────────╮
+    │ Training result                          │
+    ├──────────────────────────────────────────┤
+    │ episodes_total                         2 │
+    │ num_env_steps_sampled                  2 │
+    │ num_env_steps_trained                  0 │
+    │ sampler_results/episode_len_mean       1 │
+    │ sampler_results/episode_reward_mean    0 │
+    ╰──────────────────────────────────────────╯
+    ...
 
     :param arguments_to_parse: command line arguments (or explicitly set ones)
     :param test_run: we use light parameters for testing
