@@ -69,7 +69,7 @@ class PPOProver(TrainingHelper):
     ├──────────────────────────────────────────┤
     │ episodes_total                         2 │
     │ num_env_steps_sampled                  2 │
-    │ num_env_steps_trained                  0 │
+    │ num_env_steps_trained                  2 │
     │ sampler_results/episode_len_mean       1 │
     │ sampler_results/episode_reward_mean    0 │
     ╰──────────────────────────────────────────╯
@@ -167,8 +167,10 @@ class PPOProver(TrainingHelper):
                     },
                 },
                 train_batch_size=2 if self.test_run else 4000,
+                _enable_learner_api=False,
             )
             .rollouts(num_rollout_workers=0)
+            .rl_module(_enable_rl_module_api=False)
         )
 
 
