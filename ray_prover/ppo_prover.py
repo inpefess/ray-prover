@@ -21,8 +21,8 @@ from functools import partial
 from typing import Any, Dict, Optional
 
 import gymnasium
-from gym_saturation.wrappers.ast2vec_wrapper import AST2VecWrapper
 from gym_saturation.wrappers.duplicate_key_obs import DuplicateKeyObsWrapper
+from gym_saturation.wrappers.llmwrapper import LLMWrapper
 from gymnasium import Env
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -36,7 +36,7 @@ from ray_prover.curriculum import curriculum_fn
 from ray_prover.random_algorithm import RandomAlgorithm
 from ray_prover.training_helper import TrainingHelper
 
-EMBEDDING_DIM = 256
+EMBEDDING_DIM = 768
 
 
 class PPOProver(TrainingHelper):
@@ -108,7 +108,7 @@ class PPOProver(TrainingHelper):
         config_copy = env_config.copy()
         problem_filename = config_copy.pop(PROBLEM_FILENAME)
         env = DuplicateKeyObsWrapper(
-            AST2VecWrapper(
+            LLMWrapper(
                 gymnasium.make(**config_copy).unwrapped,
                 features_num=EMBEDDING_DIM,
             ),
