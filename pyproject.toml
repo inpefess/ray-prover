@@ -11,6 +11,7 @@ classifiers=[
 	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
 	"License :: OSI Approved :: Apache Software License",
 	"Operating System :: OS Independent",
 	"Intended Audience :: Science/Research",
@@ -23,7 +24,7 @@ classifiers=[
 include = ["ray_prover/py.typed"]
 
 [tool.poetry.dependencies]
-python = ">= 3.8.1, < 3.11"
+python = ">= 3.8.1, < 3.12"
 gym-saturation = "*"
 ray = {version = "*", extras = ["rllib"]}
 torch = "<2.0.1"
@@ -107,7 +108,7 @@ ignore_missing_imports = true
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py38,py39,py310
+envlist = py38,py39,py310,py311
 
 [testenv]
 deps =

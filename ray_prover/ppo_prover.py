@@ -21,8 +21,9 @@ from functools import partial
 from typing import Any, Dict, Optional
 
 import gymnasium
-from gym_saturation.wrappers.ast2vec_wrapper import AST2VecWrapper
+from gym_saturation.wrappers import AST2VecWrapper
 from gym_saturation.wrappers.duplicate_key_obs import DuplicateKeyObsWrapper
+from gym_saturation.wrappers.llmwrapper import LLMWrapper
 from gymnasium import Env
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -34,9 +35,7 @@ from ray.rllib.models import ModelCatalog
 from ray_prover.constants import PROBLEM_FILENAME
 from ray_prover.curriculum import curriculum_fn
 from ray_prover.random_algorithm import RandomAlgorithm
-from ray_prover.training_helper import TrainingHelper
-
-EMBEDDING_DIM = 256
+from ray_prover.training_helper import ClauseRepresentation, TrainingHelper
 
 
 class PPOProver(TrainingHelper):
@@ -46,33 +45,34 @@ class PPOProver(TrainingHelper):
     >>> storage_path = getfixture("tmp_path")
     >>> from gym_saturation.constants import MOCK_TPTP_PROBLEM
     >>> test_arguments = ["--prover", "Vampire", "--max_clauses", "1",
-    ...     "--problem_filename", MOCK_TPTP_PROBLEM]
+    ...     "--problem_filename", MOCK_TPTP_PROBLEM, "--clause_representation",
+    ...     "CODEBERT"]
     >>> PPOProver(True, storage_path).train_algorithm(
     ...     test_arguments + ["--random_baseline"])
     ╭─...
     ...
-    ╭──────────────────────────────────────────╮
-    │ Training result                          │
-    ├──────────────────────────────────────────┤
-    │ episodes_total                         2 │
-    │ num_env_steps_sampled                  2 │
-    │ num_env_steps_trained                  2 │
-    │ sampler_results/episode_len_mean       1 │
-    │ sampler_results/episode_reward_mean    0 │
-    ╰──────────────────────────────────────────╯
+    ╭─...─╮
+    │ Trial RandomAlgorithm_VampireTST001-...result │
+    ├─...─┤
+    │ episodes_total 2 │
+    │ num_env_steps_sampled 2 │
+    │ num_env_steps_trained 2 │
+    │ sampler_results/episode_len_mean 1 │
+    │ sampler_results/episode_reward_mean 0 │
+    ╰─...─╯
     ...
     >>> PPOProver(True, storage_path).train_algorithm(test_arguments)
     ╭─...
     ...
-    ╭──────────────────────────────────────────╮
-    │ Training result                          │
-    ├──────────────────────────────────────────┤
-    │ episodes_total                         2 │
-    │ num_env_steps_sampled                  2 │
-    │ num_env_steps_trained                  0 │
-    │ sampler_results/episode_len_mean       1 │
-    │ sampler_results/episode_reward_mean    0 │
-    ╰──────────────────────────────────────────╯
+    ╭─...─╮
+    │ Trial PPO_VampireTST001-... result │
+    ├─...─┤
+    │ episodes_total 2 │
+    │ num_env_steps_sampled 2 │
+    │ num_env_steps_trained 2 │
+    │ sampler_results/episode_len_mean 1 │
+    │ sampler_results/episode_reward_mean 0 │
+    ╰─...─╯
     ...
 
     :param arguments_to_parse: command line arguments (or explicitly set ones)
@@ -97,20 +97,33 @@ class PPOProver(TrainingHelper):
         )
 
     def env_creator(
-        self, env_config: Dict[str, Any]
+        self,
+        env_config: Dict[str, Any],
     ) -> Env:  # pragma: no cover
         """
-        Return a prover with AST2Vec state representation.
+        Return a prover with state representation.
 
         :param env_config: an environment config
         :returns: an environment
         """
         config_copy = env_config.copy()
         problem_filename = config_copy.pop(PROBLEM_FILENAME)
+        embedding_dim = (
+            256
+            if self.parsed_arguments.clause_representation
+            == ClauseRepresentation.AST2VEC
+            else 768
+        )
+        wrapper_class = (
+            AST2VecWrapper
+            if self.parsed_arguments.clause_representation
+            == ClauseRepresentation.AST2VEC
+            else LLMWrapper
+        )
         env = DuplicateKeyObsWrapper(
-            AST2VecWrapper(
+            wrapper_class(
                 gymnasium.make(**config_copy).unwrapped,
-                features_num=EMBEDDING_DIM,
+                features_num=embedding_dim,
             ),
             # ``ParametricActionsModel`` expects a key 'cart' (from the
             # CartPole environment) to be present in the observation
@@ -139,6 +152,12 @@ class PPOProver(TrainingHelper):
                 sgd_minibatch_size=1 if self.test_run else 128,
                 num_sgd_iter=1 if self.test_run else 30,
             )
+        embedding_dim = (
+            256
+            if self.parsed_arguments.clause_representation
+            == ClauseRepresentation.AST2VEC
+            else 768
+        )
         return (
             config.environment(
                 self.env_id,
@@ -161,14 +180,16 @@ class PPOProver(TrainingHelper):
                     # we pass relevant parameters to ``ParametricActionsModel``
                     "custom_model_config": {
                         "true_obs_shape": (
-                            EMBEDDING_DIM * self.parsed_arguments.max_clauses,
+                            embedding_dim * self.parsed_arguments.max_clauses,
                         ),
-                        "action_embed_size": EMBEDDING_DIM,
+                        "action_embed_size": embedding_dim,
                     },
                 },
                 train_batch_size=2 if self.test_run else 4000,
+                _enable_learner_api=False,
             )
             .rollouts(num_rollout_workers=0)
+            .rl_module(_enable_rl_module_api=False)
         )
 
 

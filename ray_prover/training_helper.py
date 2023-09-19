@@ -20,6 +20,7 @@ Training Helper
 import argparse
 import os
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 import ray
@@ -32,6 +33,13 @@ from ray.tune.stopper import Stopper
 
 from ray_prover.clauses_metrics import ClauseMetrics
 from ray_prover.custom_stopper import CustomStopper
+
+
+class ClauseRepresentation(Enum):
+    """Clause representation service."""
+
+    AST2VEC = 0
+    CODEBERT = 1
 
 
 class TrainingHelper(ABC):
@@ -102,6 +110,15 @@ class TrainingHelper(ABC):
             required=False,
             help="a harder problem to solve next",
         )
+        parser.add_argument(
+            "--clause_representation",
+            choices=[
+                ClauseRepresentation.AST2VEC.name,
+                ClauseRepresentation.CODEBERT.name,
+            ],
+            required=False,
+            help="clause representation service",
+        )
         self.parsed_arguments = parser.parse_args(arguments_to_parse)
 
     def _get_stop_conditions(self) -> Union[Dict[str, Any], Stopper]:
@@ -122,31 +139,17 @@ class TrainingHelper(ABC):
             )
         )
 
-    def train_algorithm(
-        self,
-        arguments_to_parse: Optional[List[str]] = None,
-    ) -> None:
-        """
-        Train a reinforcement learning algorithm.
-
-        :param arguments_to_parse: command line arguments
-            (or explicitly set ones)
-        """
-        self.parse_args(arguments_to_parse)
-        self._env_id = (
-            self.parsed_arguments.prover
-            + os.path.basename(self.parsed_arguments.problem_filename)[:-2]
-        )
-        register_env(self.env_id, self.env_creator)
+    def _ray_loop(self) -> None:
+        env_config = {
+            "id": f"{self. parsed_arguments.prover}-v0",
+            "max_clauses": self.parsed_arguments.max_clauses,
+            "problem_filename": self.parsed_arguments.problem_filename,
+        }
         config = (
             self.get_algorithm_config()
             .environment(
                 self.env_id,
-                env_config={
-                    "id": f"{self. parsed_arguments.prover}-v0",
-                    "max_clauses": self.parsed_arguments.max_clauses,
-                    "problem_filename": self.parsed_arguments.problem_filename,
-                },
+                env_config=env_config,
             )
             .callbacks(make_multi_callbacks([ClauseMetrics]))
         )
@@ -161,6 +164,28 @@ class TrainingHelper(ABC):
         )
         tuner.fit()
         ray.shutdown()
+
+    def train_algorithm(
+        self,
+        arguments_to_parse: Optional[List[str]] = None,
+    ) -> None:
+        """
+        Train a reinforcement learning algorithm.
+
+        :param arguments_to_parse: command line arguments
+            (or explicitly set ones)
+        """
+        self.parse_args(arguments_to_parse)
+        if self.parsed_arguments.clause_representation is not None:
+            self.parsed_arguments.clause_representation = ClauseRepresentation[
+                self.parsed_arguments.clause_representation
+            ]
+        self._env_id = (
+            self.parsed_arguments.prover
+            + os.path.basename(self.parsed_arguments.problem_filename)[:-2]
+        )
+        register_env(self.env_id, self.env_creator)
+        self._ray_loop()
 
     @abstractmethod
     def get_algorithm_config(self) -> AlgorithmConfig:
