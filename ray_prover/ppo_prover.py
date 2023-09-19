@@ -51,28 +51,28 @@ class PPOProver(TrainingHelper):
     ...     test_arguments + ["--random_baseline"])
     ╭─...
     ...
-    ╭──────────────────────────────────────────╮
-    │ Training result                          │
-    ├──────────────────────────────────────────┤
-    │ episodes_total                         2 │
-    │ num_env_steps_sampled                  2 │
-    │ num_env_steps_trained                  2 │
-    │ sampler_results/episode_len_mean       1 │
-    │ sampler_results/episode_reward_mean    0 │
-    ╰──────────────────────────────────────────╯
+    ╭─...─╮
+    │ Trial RandomAlgorithm_VampireTST001-...result │
+    ├─...─┤
+    │ episodes_total 2 │
+    │ num_env_steps_sampled 2 │
+    │ num_env_steps_trained 2 │
+    │ sampler_results/episode_len_mean 1 │
+    │ sampler_results/episode_reward_mean 0 │
+    ╰─...─╯
     ...
     >>> PPOProver(True, storage_path).train_algorithm(test_arguments)
     ╭─...
     ...
-    ╭──────────────────────────────────────────╮
-    │ Training result                          │
-    ├──────────────────────────────────────────┤
-    │ episodes_total                         2 │
-    │ num_env_steps_sampled                  2 │
-    │ num_env_steps_trained                  2 │
-    │ sampler_results/episode_len_mean       1 │
-    │ sampler_results/episode_reward_mean    0 │
-    ╰──────────────────────────────────────────╯
+    ╭─...─╮
+    │ Trial PPO_VampireTST001-... result │
+    ├─...─┤
+    │ episodes_total 2 │
+    │ num_env_steps_sampled 2 │
+    │ num_env_steps_trained 2 │
+    │ sampler_results/episode_len_mean 1 │
+    │ sampler_results/episode_reward_mean 0 │
+    ╰─...─╯
     ...
 
     :param arguments_to_parse: command line arguments (or explicitly set ones)

@@ -44,29 +44,15 @@ class ThompsonSampling(TrainingHelper):
     ...     test_arguments + ["--random_baseline"])
     ╭─...
     ...
-    ╭──────────────────────────────────────────╮
-    │ Training result                          │
-    ├──────────────────────────────────────────┤
-    │ episodes_total                         1 │
-    │ num_env_steps_sampled                  1 │
-    │ num_env_steps_trained                  1 │
-    │ sampler_results/episode_len_mean       1 │
-    │ sampler_results/episode_reward_mean    0 │
-    ╰──────────────────────────────────────────╯
-    ...
-    >>> ThompsonSampling(True, storage_path).train_algorithm(
-    ...     test_arguments)
-    ╭─...
-    ...
-    ╭──────────────────────────────────────────╮
-    │ Training result                          │
-    ├──────────────────────────────────────────┤
-    │ episodes_total                         1 │
-    │ num_env_steps_sampled                  1 │
-    │ num_env_steps_trained                  1 │
-    │ sampler_results/episode_len_mean       1 │
-    │ sampler_results/episode_reward_mean    0 │
-    ╰──────────────────────────────────────────╯
+    ╭─...─╮
+    │ Trial RandomAlgorithm_VampireTST001-... result │
+    ├──...─┤
+    │ episodes_total 1 │
+    │ num_env_steps_sampled 1 │
+    │ num_env_steps_trained 1 │
+    │ sampler_results/episode_len_mean 1 │
+    │ sampler_results/episode_reward_mean 0 │
+    ╰─...─╯
     ...
     """
 
