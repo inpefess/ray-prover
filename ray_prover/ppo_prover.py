@@ -22,18 +22,15 @@ from typing import Any, Dict, Optional
 
 import gymnasium
 from gym_saturation.wrappers import AST2VecWrapper
-from gym_saturation.wrappers.duplicate_key_obs import DuplicateKeyObsWrapper
 from gym_saturation.wrappers.llmwrapper import LLMWrapper
 from gymnasium import Env
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.algorithms.ppo import PPOConfig
-from ray.rllib.examples.parametric_actions_cartpole import (
-    TorchParametricActionsModel,
-)
 from ray.rllib.models import ModelCatalog
 
 from ray_prover.constants import PROBLEM_FILENAME
 from ray_prover.curriculum import curriculum_fn
+from ray_prover.parametric_actions_model import ParametricActionsModel
 from ray_prover.random_algorithm import RandomAlgorithm
 from ray_prover.training_helper import ClauseRepresentation, TrainingHelper
 
@@ -92,9 +89,7 @@ class PPOProver(TrainingHelper):
             If ``None`` then Ray default is used
         """
         super().__init__(test_run, storage_path)
-        ModelCatalog.register_custom_model(
-            "pa_model", TorchParametricActionsModel
-        )
+        ModelCatalog.register_custom_model("pa_model", ParametricActionsModel)
 
     def env_creator(
         self,
@@ -120,19 +115,9 @@ class PPOProver(TrainingHelper):
             == ClauseRepresentation.AST2VEC
             else LLMWrapper
         )
-        env = DuplicateKeyObsWrapper(
-            wrapper_class(
-                gymnasium.make(**config_copy).unwrapped,
-                features_num=embedding_dim,
-            ),
-            # ``ParametricActionsModel`` expects a key 'cart' (from the
-            # CartPole environment) to be present in the observation
-            # dictionary. We add such a key and use 'avail_actions' as
-            # its value, since in case of the given clause algorithm,
-            # the clauses to choose from are both actions and
-            # observations.
-            new_key="cart",
-            key_to_duplicate="avail_actions",
+        env = wrapper_class(
+            gymnasium.make(**config_copy).unwrapped,
+            features_num=embedding_dim,
         )
         env.set_task(problem_filename)
         return env

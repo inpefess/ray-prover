@@ -94,6 +94,9 @@ max-statements = 10
 spelling-dict = "en_GB"
 spelling-private-dict-file = "spelling.dict"
 
+[tool.pylint.typecheck]
+generated-members = ["torch"]
+
 [tool.mypy]
 show_error_codes = true
 incremental = true
