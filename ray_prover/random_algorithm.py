@@ -19,11 +19,9 @@ Random Policy and Algorithm
 """
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.examples.policy.random_policy import RandomPolicy
-from ray.rllib.models.modelv2 import restore_original_dimensions
 from ray.rllib.policy.sample_batch import SampleBatch
 from ray.rllib.utils.typing import TensorStructType, TensorType
 
@@ -84,18 +82,9 @@ class PatchedRandomPolicy(RandomPolicy):
                 with shape like
                 {"f1": [BATCH_SIZE, ...], "f2": [BATCH_SIZE, ...]}.
         """
-        real_obs = restore_original_dimensions(
-            obs_batch,
-            self.observation_space,
-            tensorlib=np,
-        )
         return (
             [
-                self.action_space_for_sampling.sample(
-                    mask=real_obs["action_mask"][i].astype(np.int8)
-                    if "action_mask" in real_obs
-                    else None
-                )
+                self.action_space_for_sampling.sample()
                 for i in range(len(obs_batch))
             ],
             [],

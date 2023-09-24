@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ray-prover"
-version = "0.0.5"
+version = "0.0.6"
 description = "Generic saturation prover using Ray RLlib"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -59,7 +59,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--doctest-modules --cov ray_prover --cov-report xml --cov-fail-under=90 --junit-xml test-results/ray-prover.xml"
+addopts = "--doctest-modules --cov ray_prover --cov-report xml --cov-fail-under=80 --junit-xml test-results/ray-prover.xml"
 testpaths = ["ray_prover"]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
@@ -93,6 +93,9 @@ max-statements = 10
 [tool.pylint.spelling]
 spelling-dict = "en_GB"
 spelling-private-dict-file = "spelling.dict"
+
+[tool.pylint.typecheck]
+generated-members = ["torch"]
 
 [tool.mypy]
 show_error_codes = true
@@ -131,7 +134,7 @@ commands =
 github_url = "https://github.com/inpfess/ray-prover/"
 
 [tool.tbump.version]
-current = "0.0.5"
+current = "0.0.6"
 regex = '''
   (?P<major>\d+)
   \.

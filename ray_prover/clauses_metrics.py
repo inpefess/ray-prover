@@ -72,7 +72,7 @@ class ClauseMetrics(DefaultCallbacks):
             env.state.clauses
         )
         episode.custom_metrics[f"{task}/chars_generated"] = sum(
-            len(clause["literals"]) for clause in env.state.clauses
+            len(clause["literals"]) for clause in env.state.clauses.values()
         )
         episode.custom_metrics[f"{task}/terminated"] = (
             1 if env.state.terminated else 0

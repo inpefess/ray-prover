@@ -33,18 +33,11 @@ How to install
 How to use
 ***********
 
-There are two scripts: for PPO and Thompson sampling.
+There is one script, for PPO.
 
 ``--prover`` can be ``Vampire`` or ``iProver``
 
-Add ``--random_baseline`` for not learning anything. Thompson
-sampling works out of the box:
-
-.. code:: sh
-	  
-   python ray_prover/thompson_sampling.py --prover Vampire \
-   --max_clause 20 --problem_filename \
-   ~/data/TPTP-v8.1.2/Problems/SET/SET001-1.p --random_baseline
+Add ``--random_baseline`` for not learning anything.
 
 For PPO, one should launch clause representation Dockers first. See
 details for `CodeBERT
