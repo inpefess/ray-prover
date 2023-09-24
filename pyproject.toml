@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ray-prover"
-version = "0.0.5"
+version = "0.0.6"
 description = "Generic saturation prover using Ray RLlib"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -134,7 +134,7 @@ commands =
 github_url = "https://github.com/inpfess/ray-prover/"
 
 [tool.tbump.version]
-current = "0.0.5"
+current = "0.0.6"
 regex = '''
   (?P<major>\d+)
   \.
