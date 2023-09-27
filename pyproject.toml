@@ -2,7 +2,7 @@
 name = "ray-prover"
 version = "0.0.6"
 description = "Generic saturation prover using Ray RLlib"
-authors = ["Boris Shminke <boris@shminke.ml>"]
+authors = ["Boris Shminke <boris@shminke.com>"]
 license = "Apache-2.0"
 packages = [{include = "ray_prover"}]
 repository = "https://github.com/inpefess/ray-prover"
@@ -22,6 +22,7 @@ classifiers=[
 	"Typing :: Typed"
 ]
 include = ["ray_prover/py.typed"]
+keywords = ["reinforcement learning", "automated theorem proving"]
 
 [tool.poetry.dependencies]
 python = ">= 3.8.1, < 3.12"
@@ -45,6 +46,9 @@ toml = "*"
 furo = "*"
 sphinx-gallery = "*"
 jedi = "*"
+pyroma = "*"
+bandit = "*"
+pyupgrade = "*"
 
 [tool.black]
 line-length=79
@@ -116,17 +120,21 @@ envlist = py38,py39,py310,py311
 [testenv]
 deps =
     pytest-cov
+    flake8
     pydocstyle
     pylint
     mypy
     toml
     pyenchant
-    flake8
+    pyroma
+    bandit
 commands =
     pydocstyle ray_prover
     flake8 ray_prover
     pylint ray_prover
     mypy ray_prover
+    pyroma -n 10 .
+    bandit -r ray_prover
     pytest
 """
 
