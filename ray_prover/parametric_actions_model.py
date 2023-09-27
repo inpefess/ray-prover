@@ -40,8 +40,8 @@ class ParametricActionsModel(TorchParametricActionsModel):
         :param seq_lens: kept for compatibility
         :return: action logits and unmodified input ``state``
         """
-        avail_actions = input_dict["obs"]["avail_actions"]
-        action_embed, _ = self.action_embed_model({"obs": avail_actions})
+        clause_embeddings = input_dict["obs"]["clause_embeddings"]
+        action_embed, _ = self.action_embed_model({"obs": clause_embeddings})
         intent_vector = torch.unsqueeze(action_embed, 1)
-        action_logits = torch.sum(avail_actions * intent_vector, dim=2)
+        action_logits = torch.sum(clause_embeddings * intent_vector, dim=2)
         return action_logits, state
