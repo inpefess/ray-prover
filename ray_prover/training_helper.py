@@ -88,9 +88,9 @@ class TrainingHelper(ABC):
         )
         parser.add_argument(
             "--prover",
-            choices=["Vampire", "iProver"],
+            choices=["Vampire", "iProver", "Vampair"],
             required=True,
-            help="Which prover to guide: Vampire or iProver",
+            help="Which prover to guide: Vampire, Vampair or iProver",
         )
         parser.add_argument(
             "--max_clauses",

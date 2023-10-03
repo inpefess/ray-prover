@@ -31,6 +31,7 @@ from ray.rllib.policy import Policy
 class ClauseMetrics(DefaultCallbacks):
     """Clause metrics callback."""
 
+    # pylint: disable=too-many-arguments
     def on_episode_end(
         self,
         *,

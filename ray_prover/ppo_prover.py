@@ -20,10 +20,13 @@ PPO example
 from functools import partial
 from typing import Any, Dict, Optional
 
-import gymnasium
-from gym_saturation.wrappers import AST2VecWrapper
-from gym_saturation.wrappers.llmwrapper import LLMWrapper
-from gymnasium import Env
+import gymnasium as gym
+from gym_saturation.wrappers import (
+    AST2VecWrapper,
+    LLMWrapper,
+    Md2DWrapper,
+    UsefulActionsWrapper,
+)
 from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.models import ModelCatalog
@@ -94,7 +97,7 @@ class PPOProver(TrainingHelper):
     def env_creator(
         self,
         env_config: Dict[str, Any],
-    ) -> Env:  # pragma: no cover
+    ) -> gym.Env:  # pragma: no cover
         """
         Return a prover with state representation.
 
@@ -116,9 +119,14 @@ class PPOProver(TrainingHelper):
             else LLMWrapper
         )
         env = wrapper_class(
-            gymnasium.make(**config_copy).unwrapped,
+            gym.make(**config_copy).unwrapped,
             features_num=embedding_dim,
         )
+        if config_copy["id"] == "Vampair-v0":
+            env = gym.wrappers.TimeLimit(  # type: ignore
+                UsefulActionsWrapper(Md2DWrapper(env)),
+                max_episode_steps=config_copy["max_clauses"],
+            )
         env.set_task(problem_filename)
         return env
 
