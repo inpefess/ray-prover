@@ -58,7 +58,7 @@ class PPOProver(TrainingHelper):
     │ num_env_steps_sampled 2 │
     │ num_env_steps_trained 2 │
     │ sampler_results/episode_len_mean 1 │
-    │ sampler_results/episode_reward_mean 0 │
+    │ sampler_results/episode_reward_mean -1 │
     ╰─...─╯
     ...
     >>> PPOProver(True, storage_path).train_algorithm(test_arguments)
@@ -71,7 +71,7 @@ class PPOProver(TrainingHelper):
     │ num_env_steps_sampled 2 │
     │ num_env_steps_trained 2 │
     │ sampler_results/episode_len_mean 1 │
-    │ sampler_results/episode_reward_mean 0 │
+    │ sampler_results/episode_reward_mean -1 │
     ╰─...─╯
     ...
 
@@ -118,15 +118,17 @@ class PPOProver(TrainingHelper):
             == ClauseRepresentation.AST2VEC
             else LLMWrapper
         )
-        env = wrapper_class(
-            gym.make(**config_copy).unwrapped,
-            features_num=embedding_dim,
+        env = gym.wrappers.TimeLimit(
+            UsefulActionsWrapper(
+                wrapper_class(
+                    gym.make(**config_copy).unwrapped,
+                    features_num=embedding_dim,
+                )
+            ),
+            max_episode_steps=config_copy["max_clauses"],
         )
         if config_copy["id"] == "Vampair-v0":
-            env = gym.wrappers.TimeLimit(  # type: ignore
-                UsefulActionsWrapper(Md2DWrapper(env)),
-                max_episode_steps=config_copy["max_clauses"],
-            )
+            env = Md2DWrapper(env)  # type: ignore
         env.set_task(problem_filename)
         return env
 
